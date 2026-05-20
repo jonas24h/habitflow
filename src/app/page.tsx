@@ -13,7 +13,7 @@ import {
 import type { Habit, HabitSchedule } from "@/types/habit";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { CalendarDays, CheckCircle2, Plus } from "lucide-react";
+import { BarChart3, CalendarDays, CheckCircle2, Dumbbell, Home, Plus } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 const DATE_FORMATTER = new Intl.DateTimeFormat("en", {
@@ -173,18 +173,22 @@ export default function HomePage() {
   }
 
   return (
-    <main className="min-h-dvh bg-[#f0f2f5] font-sans text-[#1d1d1f]">
-      <div className="mx-auto min-h-dvh w-full max-w-[430px] bg-[#f7f8fa] shadow-[0_24px_80px_rgba(26,31,44,0.12)]">
-        <section className="flex min-h-dvh flex-col px-5 pb-8 pt-5">
-          <header className="-mx-5 bg-[#f7f8fa] px-5 pb-5 pt-3">
+    <main className="min-h-dvh bg-[#030504] font-sans text-[#f4f7f1]">
+      <div className="relative mx-auto min-h-dvh w-full max-w-[430px] overflow-hidden bg-[radial-gradient(circle_at_50%_-10%,rgba(190,255,79,0.20),transparent_34%),linear-gradient(180deg,#111610_0%,#050706_42%,#020302_100%)] shadow-[0_24px_90px_rgba(0,0,0,0.65)]">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(circle_at_85%_10%,rgba(190,255,79,0.18),transparent_32%)]" />
+        <section className="relative flex min-h-dvh flex-col px-5 pb-28 pt-5">
+          <header className="-mx-5 px-5 pb-5 pt-3">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="flex items-center gap-1.5 text-[13px] font-medium text-[#858b96]">
+                <p className="flex items-center gap-1.5 text-[13px] font-semibold text-[#8c9686]">
                   <CalendarDays size={15} />
                   {formattedDate}
                 </p>
-                <h1 className="mt-2 text-[34px] font-semibold leading-none tracking-[-0.025em]">
-                  Today
+                <p className="mt-3 text-[15px] font-medium text-[#8c9686]">
+                  Good morning
+                </p>
+                <h1 className="mt-1 text-[40px] font-bold leading-none tracking-[-0.04em]">
+                  Jonas
                 </h1>
               </div>
 
@@ -193,14 +197,14 @@ export default function HomePage() {
                   initial={{ opacity: 0, scale: 0.88 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.35, ease: "easeOut" }}
-                  className="flex h-[52px] min-w-[52px] items-center justify-center rounded-[22px] bg-white/90 px-3 text-[13px] font-semibold text-[#1d1d1f] shadow-[0_10px_28px_rgba(26,31,44,0.08)] ring-1 ring-black/[0.035]"
+                  className="flex h-[52px] min-w-[52px] items-center justify-center rounded-[22px] border border-white/10 bg-white/[0.08] px-3 text-[13px] font-bold text-[#d8ff69] shadow-[0_10px_30px_rgba(190,255,79,0.12)] backdrop-blur-xl"
                 >
                   {progressPercent}%
                 </motion.div>
 
                 <Link
                   href="/habits"
-                  className="pointer-events-auto flex h-[52px] w-[52px] shrink-0 touch-manipulation items-center justify-center rounded-[22px] bg-[#007aff] text-white shadow-[0_10px_24px_rgba(0,122,255,0.22)] transition active:scale-95"
+                  className="pointer-events-auto flex h-[52px] w-[52px] shrink-0 touch-manipulation items-center justify-center rounded-[22px] bg-[#c6ff3d] text-[#081006] shadow-[0_14px_34px_rgba(198,255,61,0.30)] transition active:scale-95"
                   aria-label="Manage habits"
                 >
                   <Plus size={21} />
@@ -210,21 +214,55 @@ export default function HomePage() {
           </header>
 
           <motion.section
+            initial={{ opacity: 0, y: 18, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ type: "spring", stiffness: 180, damping: 24 }}
+            className="relative overflow-hidden rounded-[36px] border border-white/10 bg-white/[0.08] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.10)] backdrop-blur-2xl"
+          >
+            <div className="pointer-events-none absolute -right-16 -top-20 h-44 w-44 rounded-full bg-[#c6ff3d]/20 blur-3xl" />
+            <div className="relative flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[13px] font-semibold text-[#9fa895]">
+                  Daily momentum
+                </p>
+                <p className="mt-3 text-[54px] font-black leading-none tracking-[-0.07em] text-white">
+                  {progressPercent}
+                  <span className="text-[28px] text-[#c6ff3d]">%</span>
+                </p>
+                <p className="mt-3 text-[15px] font-medium text-[#9fa895]">
+                  {completedToday} of {dueTodayCount} due habits complete
+                </p>
+              </div>
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[24px] bg-[#c6ff3d] text-[#081006] shadow-[0_14px_34px_rgba(198,255,61,0.28)]">
+                <Dumbbell size={24} />
+              </div>
+            </div>
+            <div className="relative mt-7 h-3 overflow-hidden rounded-full bg-white/[0.10]">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${progressPercent}%` }}
+                transition={{ type: "spring", stiffness: 120, damping: 22 }}
+                className="h-full rounded-full bg-[#c6ff3d] shadow-[0_0_20px_rgba(198,255,61,0.45)]"
+              />
+            </div>
+          </motion.section>
+
+          <motion.section
             initial={{ opacity: 1, y: 0 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
-            className="w-full shrink-0 rounded-[30px] bg-white/90 p-4 shadow-[0_14px_36px_rgba(26,31,44,0.06)] ring-1 ring-black/[0.035]"
+            className="mt-4 w-full shrink-0 rounded-[30px] border border-white/10 bg-white/[0.07] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.24)] backdrop-blur-2xl"
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[13px] font-medium text-[#858b96]">
+                <p className="text-[13px] font-semibold text-[#8c9686]">
                   Last 7 days
                 </p>
-                <h2 className="mt-1 text-[21px] font-semibold tracking-[-0.018em]">
+                <h2 className="mt-1 text-[21px] font-bold tracking-[-0.025em] text-white">
                   Weekly overview
                 </h2>
               </div>
-              <p className="rounded-full bg-[#f2f3f5] px-3 py-1.5 text-[13px] font-semibold text-[#656b75]">
+              <p className="rounded-full bg-[#c6ff3d]/15 px-3 py-1.5 text-[13px] font-bold text-[#d8ff69] ring-1 ring-[#c6ff3d]/20">
                 {progressPercent}%
               </p>
             </div>
@@ -246,18 +284,18 @@ export default function HomePage() {
                   <div
                     key={day.key}
                     className={`flex min-w-0 flex-col items-center rounded-[20px] px-1.5 py-2.5 transition ${
-                      day.isToday ? "bg-[#f2f8ff]" : "bg-transparent"
+                      day.isToday ? "bg-[#c6ff3d]/12 ring-1 ring-[#c6ff3d]/20" : "bg-transparent"
                     }`}
                   >
                     <p
                       className={`text-[11px] font-semibold ${
-                        day.isToday ? "text-[#007aff]" : "text-[#858b96]"
+                        day.isToday ? "text-[#d8ff69]" : "text-[#808a7c]"
                       }`}
                     >
                       {day.label.slice(0, 3)}
                     </p>
 
-                    <div className="mt-2 flex h-16 w-5 items-end overflow-hidden rounded-full bg-[#edf0f3]">
+                    <div className="mt-2 flex h-16 w-5 items-end overflow-hidden rounded-full bg-white/[0.10]">
                       <motion.div
                         initial={{ height: 0 }}
                         animate={{ height: `${dayPercent}%` }}
@@ -266,14 +304,14 @@ export default function HomePage() {
                           ease: [0.22, 1, 0.36, 1],
                         }}
                         className={`w-full rounded-full ${
-                          day.isToday ? "bg-[#007aff]" : "bg-[#34c759]"
+                          day.isToday ? "bg-[#c6ff3d] shadow-[0_0_14px_rgba(198,255,61,0.45)]" : "bg-[#6f7a68]"
                         }`}
                       />
                     </div>
 
                     <p
                       className={`mt-2 text-[11px] font-semibold ${
-                        day.isToday ? "text-[#007aff]" : "text-[#656b75]"
+                        day.isToday ? "text-[#d8ff69]" : "text-[#8c9686]"
                       }`}
                     >
                       {dayPercent}%
@@ -286,10 +324,10 @@ export default function HomePage() {
 
           <section className="mt-7 flex flex-1 flex-col gap-3.5">
             <div className="flex items-center justify-between">
-              <h2 className="text-[22px] font-semibold tracking-[-0.02em]">
-                To do today
+              <h2 className="text-[24px] font-black tracking-[-0.035em] text-white">
+                Today
               </h2>
-              <p className="text-sm font-medium text-[#858b96]">
+              <p className="text-sm font-semibold text-[#8c9686]">
                 {remainingToday} left
               </p>
             </div>
@@ -314,17 +352,17 @@ export default function HomePage() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -6, scale: 0.98 }}
                   transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-                  className="rounded-[30px] bg-white/90 p-6 text-center shadow-[0_14px_36px_rgba(26,31,44,0.055)] ring-1 ring-black/[0.035]"
+                  className="rounded-[34px] border border-white/10 bg-white/[0.07] p-6 text-center shadow-[0_18px_50px_rgba(0,0,0,0.24)] backdrop-blur-2xl"
                 >
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-[20px] bg-[#edf7f1] text-[#34c759]">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-[20px] bg-[#c6ff3d] text-[#081006] shadow-[0_12px_28px_rgba(198,255,61,0.28)]">
                     <CheckCircle2 size={22} />
                   </div>
-                  <p className="mt-4 text-lg font-semibold tracking-[-0.015em]">
+                  <p className="mt-4 text-lg font-bold tracking-[-0.02em] text-white">
                     {dueTodayCount === 0
                       ? "Nothing is due today"
                       : "You are done for today"}
                   </p>
-                  <p className="mt-2 text-sm font-medium text-[#858b96]">
+                  <p className="mt-2 text-sm font-medium text-[#8c9686]">
                     {dueTodayCount === 0
                       ? "Scheduled habits will appear when they are due."
                       : "All due habits are checked off."}
@@ -340,12 +378,12 @@ export default function HomePage() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}
                   transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-                  className="rounded-[30px] border border-dashed border-black/10 bg-white/90 p-8 text-center shadow-[0_14px_36px_rgba(26,31,44,0.05)]"
+                  className="rounded-[34px] border border-dashed border-white/15 bg-white/[0.06] p-8 text-center shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur-2xl"
                 >
-                  <p className="text-lg font-semibold tracking-[-0.015em]">
+                  <p className="text-lg font-bold tracking-[-0.02em] text-white">
                     No habits yet
                   </p>
-                  <p className="mt-2 text-sm font-medium text-[#858b96]">
+                  <p className="mt-2 text-sm font-medium text-[#8c9686]">
                     Add your first habit and start building momentum today.
                   </p>
                 </motion.div>
@@ -364,10 +402,10 @@ export default function HomePage() {
                   className="mt-3 flex flex-col gap-3.5"
                 >
                   <div className="flex items-center justify-between">
-                    <h2 className="text-[22px] font-semibold tracking-[-0.02em]">
+                    <h2 className="text-[24px] font-black tracking-[-0.035em] text-white">
                       Done today
                     </h2>
-                    <p className="text-sm font-medium text-[#858b96]">
+                    <p className="text-sm font-semibold text-[#8c9686]">
                       {completedHabits.length} complete
                     </p>
                   </div>
@@ -376,7 +414,7 @@ export default function HomePage() {
                     {completedHabits.map((habit, index) => (
                       <HabitCard
                         key={habit.id}
-                       habit={habit}
+                        habit={habit}
                         index={index}
                         today={activeToday}
                         onToggle={toggleHabit}
@@ -388,6 +426,24 @@ export default function HomePage() {
               )}
             </AnimatePresence>
           </section>
+
+          <nav className="fixed bottom-4 left-1/2 z-30 grid w-[calc(100%-40px)] max-w-[390px] -translate-x-1/2 grid-cols-3 rounded-[30px] border border-white/10 bg-[#11170f]/85 p-2 shadow-[0_18px_50px_rgba(0,0,0,0.45)] backdrop-blur-2xl">
+            <div className="flex h-12 items-center justify-center gap-2 rounded-[22px] bg-[#c6ff3d] text-sm font-black text-[#081006] shadow-[0_10px_28px_rgba(198,255,61,0.24)]">
+              <Home size={18} />
+              Home
+            </div>
+            <div className="flex h-12 items-center justify-center gap-2 rounded-[22px] text-sm font-bold text-[#788274]">
+              <BarChart3 size={18} />
+              Stats
+            </div>
+            <Link
+              href="/habits"
+              className="flex h-12 items-center justify-center gap-2 rounded-[22px] text-sm font-bold text-[#788274] transition active:scale-95"
+            >
+              <Plus size={18} />
+              Habits
+            </Link>
+          </nav>
         </section>
       </div>
     </main>

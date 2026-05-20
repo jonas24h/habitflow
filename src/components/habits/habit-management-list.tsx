@@ -26,11 +26,11 @@ export function HabitManagementList({
 
   if (habits.length === 0) {
     return (
-      <div className="rounded-[30px] border border-dashed border-black/10 bg-white/90 p-8 text-center shadow-[0_14px_36px_rgba(26,31,44,0.05)]">
-        <p className="text-lg font-semibold tracking-[-0.015em]">
+      <div className="rounded-[34px] border border-dashed border-white/15 bg-white/[0.06] p-8 text-center shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur-2xl">
+        <p className="text-lg font-bold tracking-[-0.02em] text-white">
           No habits yet
         </p>
-        <p className="mt-2 text-sm font-medium text-[#858b96]">
+        <p className="mt-2 text-sm font-medium text-[#8c9686]">
           Create your first scheduled habit above.
         </p>
       </div>
@@ -55,7 +55,7 @@ export function HabitManagementList({
             className={
               editingId === habit.id
                 ? ""
-                : "rounded-[30px] bg-white/90 p-4 shadow-[0_14px_36px_rgba(26,31,44,0.06)] ring-1 ring-black/[0.035]"
+                : "rounded-[32px] border border-white/10 bg-white/[0.07] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.26)] backdrop-blur-2xl"
             }
           >
             {editingId === habit.id ? (
@@ -71,7 +71,7 @@ export function HabitManagementList({
             ) : (
               <div className="flex items-center gap-3.5">
                 <div className="min-w-0 flex-1">
-                  <h2 className="truncate text-[17px] font-semibold tracking-[-0.012em] text-[#1d1d1f]">
+                  <h2 className="truncate text-[18px] font-black tracking-[-0.025em] text-white">
                     {habit.name}
                   </h2>
 
@@ -83,7 +83,7 @@ export function HabitManagementList({
                 <button
                   type="button"
                   onClick={() => setEditingId(habit.id)}
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#858b96] transition hover:bg-[#f2f3f5] active:scale-95"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/[0.08] text-[#8c9686] transition hover:bg-white/10 hover:text-[#d8ff69] active:scale-95"
                   aria-label={`Edit ${habit.name}`}
                 >
                   <Pencil size={18} />
@@ -92,7 +92,7 @@ export function HabitManagementList({
                 <button
                   type="button"
                   onClick={() => onDelete(habit.id)}
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#c1c7d0] transition hover:bg-[#fff1f1] hover:text-[#ff3b30] active:scale-95"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/[0.08] text-[#667061] transition hover:bg-white/10 hover:text-[#ff6b6b] active:scale-95"
                   aria-label={`Delete ${habit.name}`}
                 >
                   <Trash2 size={18} />

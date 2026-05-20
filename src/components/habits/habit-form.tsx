@@ -105,7 +105,7 @@ export function HabitForm({
       method="post"
       action="#"
       noValidate
-      className="w-full rounded-[28px] bg-white/90 p-3 shadow-[0_14px_36px_rgba(26,31,44,0.06)] ring-1 ring-black/[0.035]"
+      className="w-full rounded-[34px] border border-white/10 bg-white/[0.08] p-3 shadow-[0_22px_60px_rgba(0,0,0,0.32),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-2xl"
     >
       <div className="flex gap-2">
         <input
@@ -120,19 +120,19 @@ export function HabitForm({
           autoCapitalize="sentences"
           spellCheck={false}
           inputMode="text"
-          className="h-[52px] min-w-0 flex-1 rounded-[21px] bg-[#f2f3f5] px-4 text-[15px] font-medium text-[#1d1d1f] outline-none placeholder:text-[#9aa1ab]"
+          className="h-[54px] min-w-0 flex-1 rounded-[23px] border border-white/10 bg-black/25 px-4 text-[15px] font-semibold text-white outline-none placeholder:text-[#667061] focus:border-[#c6ff3d]/35 focus:bg-black/35"
         />
 
         <button
           type="submit"
-          className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-[21px] bg-[#007aff] text-white shadow-[0_10px_24px_rgba(0,122,255,0.22)] active:scale-95"
+          className="flex h-[54px] w-[54px] shrink-0 items-center justify-center rounded-[23px] bg-[#c6ff3d] text-[#081006] shadow-[0_14px_34px_rgba(198,255,61,0.30)] active:scale-95"
           aria-label={submitLabel ?? "Save habit"}
         >
           {habit ? <Check size={21} /> : <Plus size={21} />}
         </button>
       </div>
 
-      <div className="mt-3 grid grid-cols-3 gap-2 rounded-[22px] bg-[#f2f3f5] p-1">
+      <div className="mt-3 grid grid-cols-3 gap-2 rounded-[24px] bg-black/25 p-1 ring-1 ring-white/10">
         {[
           { label: "Daily", value: "daily" },
           { label: "Weekly", value: "weekly_count" },
@@ -144,10 +144,10 @@ export function HabitForm({
             onClick={() =>
               setScheduleType(option.value as HabitSchedule["type"])
             }
-            className={`h-9 rounded-[18px] text-[13px] font-semibold transition ${
+            className={`h-10 rounded-[20px] text-[13px] font-bold transition ${
               scheduleType === option.value
-                ? "bg-white text-[#1d1d1f] shadow-[0_5px_16px_rgba(26,31,44,0.08)]"
-                : "text-[#858b96]"
+                ? "bg-[#c6ff3d] text-[#081006] shadow-[0_8px_22px_rgba(198,255,61,0.24)]"
+                : "text-[#8c9686]"
             }`}
           >
             {option.label}
@@ -163,9 +163,9 @@ export function HabitForm({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.18 }}
-            className="mt-3 flex items-center justify-between rounded-[22px] bg-[#f2f3f5] px-4 py-3"
+            className="mt-3 flex items-center justify-between rounded-[24px] bg-black/25 px-4 py-3 ring-1 ring-white/10"
           >
-            <span className="text-[13px] font-medium text-[#656b75]">
+            <span className="text-[13px] font-semibold text-[#8c9686]">
               Times per week
             </span>
 
@@ -175,10 +175,10 @@ export function HabitForm({
                   key={target}
                   type="button"
                   onClick={() => setWeeklyTarget(target)}
-                  className={`flex h-7 w-7 items-center justify-center rounded-full text-[12px] font-semibold transition ${
+                  className={`flex h-7 w-7 items-center justify-center rounded-full text-[12px] font-bold transition ${
                     weeklyTarget === target
-                      ? "bg-[#007aff] text-white"
-                      : "bg-white text-[#858b96]"
+                      ? "bg-[#c6ff3d] text-[#081006]"
+                      : "bg-white/10 text-[#8c9686]"
                   }`}
                 >
                   {target}
@@ -195,7 +195,7 @@ export function HabitForm({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.18 }}
-            className="mt-3 grid grid-cols-7 gap-1.5 rounded-[22px] bg-[#f2f3f5] p-2"
+            className="mt-3 grid grid-cols-7 gap-1.5 rounded-[24px] bg-black/25 p-2 ring-1 ring-white/10"
           >
             {WEEKDAYS.map((weekday) => {
               const selected = selectedWeekdays.includes(weekday.value);
@@ -205,10 +205,10 @@ export function HabitForm({
                   key={weekday.value}
                   type="button"
                   onClick={() => toggleSelectedWeekday(weekday.value)}
-                  className={`flex h-9 items-center justify-center rounded-[16px] text-[13px] font-semibold transition ${
+                  className={`flex h-9 items-center justify-center rounded-[16px] text-[13px] font-bold transition ${
                     selected
-                      ? "bg-[#007aff] text-white"
-                      : "bg-white text-[#858b96]"
+                      ? "bg-[#c6ff3d] text-[#081006]"
+                      : "bg-white/10 text-[#8c9686]"
                   }`}
                 >
                   {weekday.label}
@@ -223,7 +223,7 @@ export function HabitForm({
         <button
           type="button"
           onClick={onCancel}
-          className="mt-3 h-10 w-full rounded-[18px] text-sm font-semibold text-[#858b96] active:scale-[0.99]"
+          className="mt-3 h-10 w-full rounded-[18px] text-sm font-bold text-[#8c9686] active:scale-[0.99]"
         >
           Cancel
         </button>

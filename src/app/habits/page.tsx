@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, BarChart3, Home, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { HabitForm } from "@/components/habits/habit-form";
@@ -103,25 +103,26 @@ export default function HabitsPage() {
   }
 
   return (
-    <main className="min-h-dvh bg-[#f0f2f5] font-sans text-[#1d1d1f]">
-      <div className="mx-auto min-h-dvh w-full max-w-[430px] bg-[#f7f8fa] shadow-[0_24px_80px_rgba(26,31,44,0.12)]">
-        <section className="flex min-h-dvh flex-col px-5 pb-8 pt-5">
-          <header className="-mx-5 bg-[#f7f8fa] px-5 pb-5 pt-3">
+    <main className="min-h-dvh bg-[#030504] font-sans text-[#f4f7f1]">
+      <div className="relative mx-auto min-h-dvh w-full max-w-[430px] overflow-hidden bg-[radial-gradient(circle_at_50%_-10%,rgba(190,255,79,0.20),transparent_34%),linear-gradient(180deg,#111610_0%,#050706_42%,#020302_100%)] shadow-[0_24px_90px_rgba(0,0,0,0.65)]">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(circle_at_85%_10%,rgba(190,255,79,0.18),transparent_32%)]" />
+        <section className="relative flex min-h-dvh flex-col px-5 pb-28 pt-5">
+          <header className="-mx-5 px-5 pb-5 pt-3">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <Link
                   href="/"
-                  className="inline-flex items-center gap-1.5 text-[13px] font-medium text-[#858b96] transition active:scale-[0.99]"
+                  className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#8c9686] transition active:scale-[0.99]"
                 >
                   <ArrowLeft size={15} />
                   Today
                 </Link>
-                <h1 className="mt-2 text-[34px] font-semibold leading-none tracking-[-0.025em]">
+                <h1 className="mt-3 text-[40px] font-black leading-none tracking-[-0.05em]">
                   Habits
                 </h1>
               </div>
 
-              <div className="flex h-[52px] min-w-[52px] items-center justify-center rounded-[22px] bg-white/90 px-3 text-[13px] font-semibold text-[#1d1d1f] shadow-[0_10px_28px_rgba(26,31,44,0.08)] ring-1 ring-black/[0.035]">
+              <div className="flex h-[52px] min-w-[52px] items-center justify-center rounded-[22px] border border-white/10 bg-white/[0.08] px-3 text-[13px] font-black text-[#d8ff69] shadow-[0_10px_30px_rgba(190,255,79,0.12)] backdrop-blur-xl">
                 {habits.length}
               </div>
             </div>
@@ -138,10 +139,10 @@ export default function HabitsPage() {
 
           <section className="mt-7 flex flex-1 flex-col gap-3.5">
             <div className="flex items-center justify-between">
-              <h2 className="text-[22px] font-semibold tracking-[-0.02em]">
+              <h2 className="text-[24px] font-black tracking-[-0.035em] text-white">
                 All habits
               </h2>
-              <p className="text-sm font-medium text-[#858b96]">
+              <p className="text-sm font-semibold text-[#8c9686]">
                 {habits.length} active
               </p>
             </div>
@@ -153,6 +154,24 @@ export default function HabitsPage() {
               onDelete={deleteHabit}
             />
           </section>
+
+          <nav className="fixed bottom-4 left-1/2 z-30 grid w-[calc(100%-40px)] max-w-[390px] -translate-x-1/2 grid-cols-3 rounded-[30px] border border-white/10 bg-[#11170f]/85 p-2 shadow-[0_18px_50px_rgba(0,0,0,0.45)] backdrop-blur-2xl">
+            <Link
+              href="/"
+              className="flex h-12 items-center justify-center gap-2 rounded-[22px] text-sm font-bold text-[#788274] transition active:scale-95"
+            >
+              <Home size={18} />
+              Home
+            </Link>
+            <div className="flex h-12 items-center justify-center gap-2 rounded-[22px] text-sm font-bold text-[#788274]">
+              <BarChart3 size={18} />
+              Stats
+            </div>
+            <div className="flex h-12 items-center justify-center gap-2 rounded-[22px] bg-[#c6ff3d] text-sm font-black text-[#081006] shadow-[0_10px_28px_rgba(198,255,61,0.24)]">
+              <Plus size={18} />
+              Habits
+            </div>
+          </nav>
         </section>
       </div>
     </main>

@@ -43,7 +43,11 @@ export function HabitCard({
         duration: 0.3,
         ease: [0.22, 1, 0.36, 1],
       }}
-      className="rounded-[30px] bg-white/90 p-4 shadow-[0_14px_36px_rgba(26,31,44,0.06)] ring-1 ring-black/[0.035]"
+      className={`rounded-[32px] border p-4 shadow-[0_18px_50px_rgba(0,0,0,0.26)] backdrop-blur-2xl transition ${
+        completed
+          ? "border-[#c6ff3d]/35 bg-[#c6ff3d]/10 shadow-[0_18px_50px_rgba(198,255,61,0.10)]"
+          : "border-white/10 bg-white/[0.07]"
+      }`}
     >
       <div className="flex items-center gap-3.5">
         <motion.button
@@ -51,15 +55,15 @@ export function HabitCard({
           onClick={() => onToggle(habit.id)}
           whileTap={{ scale: 0.92 }}
           animate={{
-            backgroundColor: completed ? "#34c759" : "#f2f3f5",
+            backgroundColor: completed ? "#c6ff3d" : "rgba(255,255,255,0.08)",
             boxShadow: completed
-              ? "0 10px 24px rgba(52, 199, 89, 0.22)"
-              : "0 0 0 rgba(52, 199, 89, 0)",
-            color: completed ? "#ffffff" : "#a3aab4",
+              ? "0 14px 32px rgba(198, 255, 61, 0.32)"
+              : "inset 0 1px 0 rgba(255,255,255,0.08)",
+            color: completed ? "#081006" : "#8c9686",
             scale: completed ? 1.03 : 1,
           }}
           transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-          className="flex h-[58px] w-[58px] shrink-0 items-center justify-center rounded-[23px]"
+          className="flex h-[62px] w-[62px] shrink-0 items-center justify-center rounded-[25px] border border-white/10"
           aria-label={completed ? "Mark habit as incomplete" : "Complete habit"}
         >
           <motion.span
@@ -80,18 +84,18 @@ export function HabitCard({
           className="min-w-0 flex-1 text-left transition active:scale-[0.99]"
         >
           <span
-            className={`block truncate text-[17px] font-semibold tracking-[-0.012em] transition ${
-              completed ? "text-[#656b75]" : "text-[#1d1d1f]"
+            className={`block truncate text-[18px] font-black tracking-[-0.025em] transition ${
+              completed ? "text-[#d8ff69]" : "text-white"
             }`}
           >
             {habit.name}
           </span>
 
-          <span className="mt-1.5 flex items-center gap-1.5 text-sm font-medium text-[#858b96]">
+          <span className="mt-1.5 flex items-center gap-1.5 text-sm font-semibold text-[#8c9686]">
             {completed ? (
-              <Check size={15} className="text-[#34c759]" strokeWidth={2.7} />
+              <Check size={15} className="text-[#c6ff3d]" strokeWidth={2.7} />
             ) : (
-              <Circle size={15} className="text-[#a3aab4]" strokeWidth={2.4} />
+              <Circle size={15} className="text-[#687264]" strokeWidth={2.4} />
             )}
             {completed && habit.schedule.type !== "weekly_count"
               ? "Done today"
@@ -102,7 +106,7 @@ export function HabitCard({
         <button
           type="button"
           onClick={() => onDelete(habit.id)}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#c1c7d0] transition hover:bg-[#fff1f1] hover:text-[#ff3b30] active:scale-95"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#667061] transition hover:bg-white/10 hover:text-[#ff6b6b] active:scale-95"
           aria-label="Delete habit"
         >
           <Trash2 size={18} />

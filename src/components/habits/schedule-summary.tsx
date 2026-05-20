@@ -29,10 +29,10 @@ export function ScheduleSummary({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-sm font-medium text-[#858b96]">
+      <span className="text-sm font-semibold text-[#8c9686]">
         {getScheduleSummary(habit.schedule)}
       </span>
-      <span className="text-xs font-medium text-[#a1a7b1]">
+      <span className="text-xs font-semibold text-[#667061]">
         {getHabitScheduleLabel(habit, today)}
       </span>
     </div>
