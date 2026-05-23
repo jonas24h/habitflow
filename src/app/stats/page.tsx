@@ -2,7 +2,12 @@
 
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { ProfileOnboarding } from "@/components/onboarding/profile-onboarding";
-import { dateKey, fromDateKey, isHabitDueOnDate } from "@/lib/habits";
+import {
+  dateKey,
+  fromDateKey,
+  getDueHabitsForDate,
+  isHabitDueOnDate,
+} from "@/lib/habits";
 import { fetchHabits } from "@/lib/habit-service";
 import { fetchProfile } from "@/lib/profile-service";
 import { supabase } from "@/lib/supabase";
@@ -12,8 +17,6 @@ import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
-  Flame,
-  Trophy,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -22,7 +25,11 @@ const MONTH_FORMATTER = new Intl.DateTimeFormat("en", {
   month: "long",
   year: "numeric",
 });
+const WEEKDAY_FORMATTER = new Intl.DateTimeFormat("en", {
+  weekday: "short",
+});
 const WEEKDAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
+const WEEKDAY_PLACEHOLDERS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 type DayOverview = {
   key: string;
@@ -40,6 +47,58 @@ type HabitInsight = {
   status: "Strong" | "Steady" | "Needs attention";
 };
 
+function getLastSevenDays(today: string) {
+  if (!today) {
+    return WEEKDAY_PLACEHOLDERS.map((label, index) => ({
+      key: `placeholder-${label}-${index}`,
+      dateKey: "",
+      label,
+      isToday: false,
+    }));
+  }
+
+  const date = fromDateKey(today);
+
+  return Array.from({ length: 7 }, (_, index) => {
+    const day = new Date(date);
+    day.setDate(date.getDate() - (6 - index));
+
+    const key = dateKey(day);
+
+    return {
+      key,
+      dateKey: key,
+      label: WEEKDAY_FORMATTER.format(day),
+      isToday: key === today,
+    };
+  });
+}
+
+function getHabitsForDateOverview(habits: Habit[], key: string) {
+  if (!key) return [];
+
+  const dueHabits = getDueHabitsForDate(habits, key);
+  const habitsById = new Map(dueHabits.map((habit) => [habit.id, habit]));
+
+  habits.forEach((habit) => {
+    if (!habit.completedDates.includes(key)) return;
+
+    const wasDueBeforeCompletion = isHabitDueOnDate(
+      {
+        ...habit,
+        completedDates: habit.completedDates.filter((date) => date !== key),
+      },
+      key
+    );
+
+    if (wasDueBeforeCompletion) {
+      habitsById.set(habit.id, habit);
+    }
+  });
+
+  return Array.from(habitsById.values());
+}
+
 function getMonthStart(date: Date) {
   return new Date(date.getFullYear(), date.getMonth(), 1);
 }
@@ -56,44 +115,6 @@ function getMonthDateKeys(month: Date) {
   return Array.from({ length: daysInMonth }, (_, index) =>
     dateKey(new Date(year, monthIndex, index + 1))
   );
-}
-
-function getCheckInDates(habits: Habit[]) {
-  return habits.flatMap((habit) => habit.completedDates);
-}
-
-function getCurrentStreak(completedDateKeys: Set<string>, today: string) {
-  let streak = 0;
-  const date = fromDateKey(today);
-
-  while (completedDateKeys.has(dateKey(date))) {
-    streak += 1;
-    date.setDate(date.getDate() - 1);
-  }
-
-  return streak;
-}
-
-function getBestStreak(completedDateKeys: Set<string>) {
-  const sortedKeys = [...completedDateKeys].sort();
-  let best = 0;
-  let current = 0;
-  let previousDate: Date | null = null;
-
-  sortedKeys.forEach((key) => {
-    const currentDate = fromDateKey(key);
-    const isNextDay =
-      previousDate &&
-      Math.round(
-        (currentDate.getTime() - previousDate.getTime()) / 86_400_000
-      ) === 1;
-
-    current = isNextDay ? current + 1 : 1;
-    best = Math.max(best, current);
-    previousDate = currentDate;
-  });
-
-  return best;
 }
 
 function isHabitDueForAnalytics(habit: Habit, key: string) {
@@ -289,15 +310,11 @@ export default function StatsPage() {
   }, [router]);
 
   const stats = useMemo(() => {
-    const completedDateKeys = new Set(getCheckInDates(habits));
-
     return {
-      currentStreak: getCurrentStreak(completedDateKeys, today),
-      bestStreak: getBestStreak(completedDateKeys),
       heatmap: getMonthlyHeatmap(habits, selectedMonth),
       habitInsights: getHabitInsights(habits, selectedMonth),
     };
-  }, [habits, selectedMonth, today]);
+  }, [habits, selectedMonth]);
 
   function completeOnboarding() {
     setNeedsOnboarding(false);
@@ -318,18 +335,23 @@ export default function StatsPage() {
     });
   }
 
-  const statCards = [
-    {
-      label: "Current streak",
-      value: stats.currentStreak,
-      icon: Flame,
-    },
-    {
-      label: "Best streak",
-      value: stats.bestStreak,
-      icon: Trophy,
-    },
-  ];
+  const weekDays = getLastSevenDays(today);
+  const weekAverage = Math.round(
+    weekDays.reduce((sum, day) => {
+      const dueForDay = day.dateKey
+        ? getHabitsForDateOverview(habits, day.dateKey)
+        : [];
+      const completedForDay = dueForDay.filter((habit) =>
+        habit.completedDates.includes(day.dateKey)
+      ).length;
+      const dayPercent =
+        dueForDay.length === 0
+          ? 0
+          : Math.round((completedForDay / dueForDay.length) * 100);
+
+      return sum + dayPercent;
+    }, 0) / weekDays.length
+  );
 
   return (
     <main className="min-h-dvh bg-[#030504] font-sans text-[#f4f7f1]">
@@ -366,36 +388,84 @@ export default function StatsPage() {
             </div>
           ) : (
             <>
-              <section className="grid grid-cols-2 gap-3">
-                {statCards.map((card, index) => {
-                  const Icon = card.icon;
+              <motion.section
+                initial={{ opacity: 1, y: 0 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
+                className="w-full shrink-0 rounded-[30px] border border-white/10 bg-white/[0.07] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.24)] backdrop-blur-2xl"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[13px] font-semibold text-[#8c9686]">
+                      Last 7 days
+                    </p>
+                    <h2 className="mt-1 text-[21px] font-bold tracking-[-0.025em] text-white">
+                      Weekly overview
+                    </h2>
+                  </div>
+                  <p className="rounded-full bg-[#c6ff3d]/15 px-3 py-1.5 text-[13px] font-bold text-[#d8ff69] ring-1 ring-[#c6ff3d]/20">
+                    {weekAverage}%
+                  </p>
+                </div>
 
-                  return (
-                    <motion.div
-                      key={card.label}
-                      initial={{ opacity: 0, y: 14, scale: 0.98 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      transition={{
-                        delay: index * 0.04,
-                        duration: 0.32,
-                        ease: [0.22, 1, 0.36, 1],
-                      }}
-                      className="rounded-[30px] border border-white/10 bg-white/[0.08] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.24),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-2xl"
-                    >
-                      <div className="flex h-11 w-11 items-center justify-center rounded-[18px] bg-[#c6ff3d]/15 text-[#d8ff69] ring-1 ring-[#c6ff3d]/20">
-                        <Icon size={20} />
+                <div className="mt-4 grid w-full min-w-0 grid-cols-7 gap-2">
+                  {weekDays.map((day) => {
+                    const dueForDay = day.dateKey
+                      ? getHabitsForDateOverview(habits, day.dateKey)
+                      : [];
+                    const completedForDay = dueForDay.filter((habit) =>
+                      habit.completedDates.includes(day.dateKey)
+                    ).length;
+                    const dayPercent =
+                      dueForDay.length === 0
+                        ? 0
+                        : Math.round((completedForDay / dueForDay.length) * 100);
+
+                    return (
+                      <div
+                        key={day.key}
+                        className={`flex min-w-0 flex-col items-center rounded-[20px] px-1.5 py-2.5 transition ${
+                          day.isToday
+                            ? "bg-[#c6ff3d]/12 ring-1 ring-[#c6ff3d]/20"
+                            : "bg-transparent"
+                        }`}
+                      >
+                        <p
+                          className={`text-[11px] font-semibold ${
+                            day.isToday ? "text-[#d8ff69]" : "text-[#808a7c]"
+                          }`}
+                        >
+                          {day.label.slice(0, 3)}
+                        </p>
+
+                        <div className="mt-2 flex h-16 w-5 items-end overflow-hidden rounded-full bg-white/[0.10]">
+                          <motion.div
+                            initial={{ height: 0 }}
+                            animate={{ height: `${dayPercent}%` }}
+                            transition={{
+                              duration: 0.55,
+                              ease: [0.22, 1, 0.36, 1],
+                            }}
+                            className={`w-full rounded-full ${
+                              day.isToday
+                                ? "bg-[#c6ff3d] shadow-[0_0_14px_rgba(198,255,61,0.45)]"
+                                : "bg-[#6f7a68]"
+                            }`}
+                          />
+                        </div>
+
+                        <p
+                          className={`mt-2 text-[11px] font-semibold ${
+                            day.isToday ? "text-[#d8ff69]" : "text-[#8c9686]"
+                          }`}
+                        >
+                          {dayPercent}%
+                        </p>
                       </div>
-                      <p className="mt-5 text-[44px] font-black leading-none tracking-[-0.06em] text-white">
-                        {card.value}
-                        <span className="text-[20px] text-[#c6ff3d]">d</span>
-                      </p>
-                      <p className="mt-2 text-[13px] font-semibold text-[#8c9686]">
-                        {card.label}
-                      </p>
-                    </motion.div>
-                  );
-                })}
-              </section>
+                    );
+                  })}
+                </div>
+              </motion.section>
 
               <section className="mt-4 rounded-[34px] border border-white/10 bg-white/[0.07] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.24)] backdrop-blur-2xl">
                 <div className="flex items-center justify-between gap-3">
