@@ -1,6 +1,7 @@
 "use client";
 
 import { HabitCard } from "@/components/habits/habit-card";
+import { BottomNav } from "@/components/layout/bottom-nav";
 import { ProfileOnboarding } from "@/components/onboarding/profile-onboarding";
 import {
   dateKey,
@@ -19,14 +20,7 @@ import type { Habit } from "@/types/habit";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import {
-  BarChart3,
-  CalendarDays,
-  CheckCircle2,
-  Dumbbell,
-  Home,
-  Plus,
-} from "lucide-react";
+import { CalendarDays, CheckCircle2, Dumbbell, Plus } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 const DATE_FORMATTER = new Intl.DateTimeFormat("en", {
@@ -246,7 +240,7 @@ export default function HomePage() {
       )}
       <div className="relative mx-auto min-h-dvh w-full max-w-[430px] overflow-hidden bg-[radial-gradient(circle_at_50%_-10%,rgba(190,255,79,0.20),transparent_34%),linear-gradient(180deg,#111610_0%,#050706_42%,#020302_100%)] shadow-[0_24px_90px_rgba(0,0,0,0.65)]">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(circle_at_85%_10%,rgba(190,255,79,0.18),transparent_32%)]" />
-        <section className="relative flex min-h-dvh flex-col px-5 pb-28 pt-5">
+        <section className="relative flex min-h-dvh flex-col px-5 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-5">
           <header className="-mx-5 px-5 pb-5 pt-3">
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -511,23 +505,7 @@ export default function HomePage() {
             </AnimatePresence>
           </section>
 
-          <nav className="fixed bottom-4 left-1/2 z-30 grid w-[calc(100%-40px)] max-w-[390px] -translate-x-1/2 grid-cols-3 rounded-[30px] border border-white/10 bg-[#11170f]/85 p-2 shadow-[0_18px_50px_rgba(0,0,0,0.45)] backdrop-blur-2xl">
-            <div className="flex h-12 items-center justify-center gap-2 rounded-[22px] bg-[#c6ff3d] text-sm font-black text-[#081006] shadow-[0_10px_28px_rgba(198,255,61,0.24)]">
-              <Home size={18} />
-              Home
-            </div>
-            <div className="flex h-12 items-center justify-center gap-2 rounded-[22px] text-sm font-bold text-[#788274]">
-              <BarChart3 size={18} />
-              Stats
-            </div>
-            <Link
-              href="/habits"
-              className="flex h-12 items-center justify-center gap-2 rounded-[22px] text-sm font-bold text-[#788274] transition active:scale-95"
-            >
-              <Plus size={18} />
-              Habits
-            </Link>
-          </nav>
+          <BottomNav />
         </section>
       </div>
     </main>
