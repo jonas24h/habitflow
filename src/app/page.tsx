@@ -28,14 +28,7 @@ import {
   Plus,
   Trophy,
 } from "lucide-react";
-import {
-  AnimatePresence,
-  LayoutGroup,
-  motion,
-  useMotionValue,
-  useSpring,
-  useTransform,
-} from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 
 const DATE_FORMATTER = new Intl.DateTimeFormat("en", {
   weekday: "long",
@@ -49,24 +42,6 @@ function getGreeting(date = new Date()) {
   if (hour >= 5 && hour < 12) return "Good morning";
   if (hour >= 12 && hour < 18) return "Good afternoon";
   return "Good evening";
-}
-
-function AnimatedNumber({ value }: { value: number }) {
-  const motionValue = useMotionValue(value);
-  const springValue = useSpring(motionValue, {
-    stiffness: 120,
-    damping: 24,
-    mass: 0.55,
-  });
-  const rounded = useTransform(springValue, (latest) =>
-    Math.round(latest).toString()
-  );
-
-  useEffect(() => {
-    motionValue.set(value);
-  }, [motionValue, value]);
-
-  return <motion.span>{rounded}</motion.span>;
 }
 
 function getHabitsForDateOverview(habits: Habit[], key: string) {
@@ -333,7 +308,7 @@ export default function HomePage() {
                   transition={{ duration: 0.35, ease: "easeOut" }}
                   className="flex h-[52px] min-w-[52px] items-center justify-center rounded-[22px] border border-white/10 bg-white/[0.08] px-3 text-[13px] font-bold text-[#d8ff69] shadow-[0_10px_30px_rgba(190,255,79,0.12)] backdrop-blur-xl"
                 >
-                  <AnimatedNumber value={progressPercent} />%
+                  {progressPercent}%
                 </motion.div>
 
                 <Link
@@ -360,7 +335,7 @@ export default function HomePage() {
                   Daily momentum
                 </p>
                 <p className="mt-3 text-[54px] font-black leading-none tracking-[-0.07em] text-white">
-                  <AnimatedNumber value={progressPercent} />
+                  {progressPercent}
                   <span className="text-[28px] text-[#c6ff3d]">%</span>
                 </p>
                 <p className="mt-3 text-[15px] font-medium text-[#9fa895]">
@@ -401,9 +376,9 @@ export default function HomePage() {
                     <Icon size={20} />
                   </div>
                   <p className="mt-5 text-[44px] font-black leading-none tracking-[-0.06em] text-white">
-                            <AnimatedNumber value={card.value} />
-                            <span className="text-[20px] text-[#c6ff3d]">d</span>
-                          </p>
+                    {card.value}
+                    <span className="text-[20px] text-[#c6ff3d]">d</span>
+                  </p>
                   <p className="mt-2 text-[13px] font-semibold text-[#8c9686]">
                     {card.label}
                   </p>
@@ -436,101 +411,99 @@ export default function HomePage() {
               </div>
             )}
 
-            <LayoutGroup>
-              <AnimatePresence initial={false}>
-                {!isLoading && todoHabitsToday.map((habit, index) => (
-                  <HabitCard
-                    key={habit.id}
-                    habit={habit}
-                    index={index}
-                    today={activeToday}
-                    onToggle={toggleHabit}
-                    onDelete={deleteHabit}
-                  />
-                ))}
+            <AnimatePresence initial={false}>
+              {!isLoading && todoHabitsToday.map((habit, index) => (
+                <HabitCard
+                  key={habit.id}
+                  habit={habit}
+                  index={index}
+                  today={activeToday}
+                  onToggle={toggleHabit}
+                  onDelete={deleteHabit}
+                />
+              ))}
 
-                {!isLoading && habits.length > 0 && todoHabitsToday.length === 0 && (
-                  <motion.div
-                    key="today-complete"
-                    layout
-                    initial={{ opacity: 0, y: 10, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -6, scale: 0.98 }}
-                    transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-                    className="rounded-[34px] border border-white/10 bg-white/[0.07] p-6 text-center shadow-[0_18px_50px_rgba(0,0,0,0.24)] backdrop-blur-2xl"
-                  >
-                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-[20px] bg-[#c6ff3d] text-[#081006] shadow-[0_12px_28px_rgba(198,255,61,0.28)]">
-                      <CheckCircle2 size={22} />
-                    </div>
-                    <p className="mt-4 text-lg font-bold tracking-[-0.02em] text-white">
-                      {dueTodayCount === 0
-                        ? "Nothing is due today"
-                        : "You are done for today"}
-                    </p>
-                    <p className="mt-2 text-sm font-medium text-[#8c9686]">
-                      {dueTodayCount === 0
-                        ? "Scheduled habits will appear when they are due."
-                        : "All due habits are checked off."}
-                    </p>
-                  </motion.div>
-                )}
+              {!isLoading && habits.length > 0 && todoHabitsToday.length === 0 && (
+                <motion.div
+                  key="today-complete"
+                  layout
+                  initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                  transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                  className="rounded-[34px] border border-white/10 bg-white/[0.07] p-6 text-center shadow-[0_18px_50px_rgba(0,0,0,0.24)] backdrop-blur-2xl"
+                >
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-[20px] bg-[#c6ff3d] text-[#081006] shadow-[0_12px_28px_rgba(198,255,61,0.28)]">
+                    <CheckCircle2 size={22} />
+                  </div>
+                  <p className="mt-4 text-lg font-bold tracking-[-0.02em] text-white">
+                    {dueTodayCount === 0
+                      ? "Nothing is due today"
+                      : "You are done for today"}
+                  </p>
+                  <p className="mt-2 text-sm font-medium text-[#8c9686]">
+                    {dueTodayCount === 0
+                      ? "Scheduled habits will appear when they are due."
+                      : "All due habits are checked off."}
+                  </p>
+                </motion.div>
+              )}
 
-                {!isLoading && habits.length === 0 && (
-                  <motion.div
-                    key="empty-habits"
-                    layout
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -6 }}
-                    transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-                    className="rounded-[34px] border border-dashed border-white/15 bg-white/[0.06] p-8 text-center shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur-2xl"
-                  >
-                    <p className="text-lg font-bold tracking-[-0.02em] text-white">
-                      No habits yet
-                    </p>
-                    <p className="mt-2 text-sm font-medium text-[#8c9686]">
-                      Add your first habit and start building momentum today.
-                    </p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {!isLoading && habits.length === 0 && (
+                <motion.div
+                  key="empty-habits"
+                  layout
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                  className="rounded-[34px] border border-dashed border-white/15 bg-white/[0.06] p-8 text-center shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur-2xl"
+                >
+                  <p className="text-lg font-bold tracking-[-0.02em] text-white">
+                    No habits yet
+                  </p>
+                  <p className="mt-2 text-sm font-medium text-[#8c9686]">
+                    Add your first habit and start building momentum today.
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-              <AnimatePresence>
-                {completedHabits.length > 0 && (
-                  <motion.div
-                    key="done-section"
-                    layout
-                    initial={{ opacity: 0, y: 14 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                    className="mt-3 flex flex-col gap-3.5"
-                  >
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-[24px] font-black tracking-[-0.035em] text-white">
-                        Done today
-                      </h2>
-                      <p className="text-sm font-semibold text-[#8c9686]">
-                        <AnimatedNumber value={completedHabits.length} /> complete
-                      </p>
-                    </div>
+            <AnimatePresence>
+              {completedHabits.length > 0 && (
+                <motion.div
+                  key="done-section"
+                  layout
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                  className="mt-3 flex flex-col gap-3.5"
+                >
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-[24px] font-black tracking-[-0.035em] text-white">
+                      Done today
+                    </h2>
+                    <p className="text-sm font-semibold text-[#8c9686]">
+                      {completedHabits.length} complete
+                    </p>
+                  </div>
 
-                    <AnimatePresence initial={false}>
-                      {completedHabits.map((habit, index) => (
-                        <HabitCard
-                          key={habit.id}
-                          habit={habit}
-                          index={index}
-                          today={activeToday}
-                          onToggle={toggleHabit}
-                          onDelete={deleteHabit}
-                        />
-                      ))}
-                    </AnimatePresence>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </LayoutGroup>
+                  <AnimatePresence initial={false}>
+                    {completedHabits.map((habit, index) => (
+                      <HabitCard
+                        key={habit.id}
+                        habit={habit}
+                        index={index}
+                        today={activeToday}
+                        onToggle={toggleHabit}
+                        onDelete={deleteHabit}
+                      />
+                    ))}
+                  </AnimatePresence>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </section>
 
           <BottomNav />
