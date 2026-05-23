@@ -1,5 +1,6 @@
 import { Check, Circle, Trash2 } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
+import Link from "next/link";
 
 import { getHabitScheduleLabel } from "@/lib/habits";
 import { Habit } from "@/types/habit";
@@ -78,9 +79,8 @@ export function HabitCard({
           </motion.span>
         </motion.button>
 
-        <button
-          type="button"
-          onClick={() => onToggle(habit.id)}
+        <Link
+          href={`/habits/${habit.id}`}
           className="min-w-0 flex-1 text-left transition active:scale-[0.99]"
         >
           <span
@@ -101,7 +101,7 @@ export function HabitCard({
               ? "Done today"
               : scheduleLabel}
           </span>
-        </button>
+        </Link>
 
         <button
           type="button"

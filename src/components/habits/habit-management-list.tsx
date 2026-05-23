@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import Link from "next/link";
 
 import { HabitForm } from "@/components/habits/habit-form";
 import { ScheduleSummary } from "@/components/habits/schedule-summary";
@@ -70,7 +71,10 @@ export function HabitManagementList({
               />
             ) : (
               <div className="flex items-center gap-3.5">
-                <div className="min-w-0 flex-1">
+                <Link
+                  href={`/habits/${habit.id}`}
+                  className="min-w-0 flex-1 transition active:scale-[0.99]"
+                >
                   <h2 className="truncate text-[18px] font-black tracking-[-0.025em] text-white">
                     {habit.name}
                   </h2>
@@ -78,7 +82,7 @@ export function HabitManagementList({
                   <div className="mt-1.5">
                     <ScheduleSummary habit={habit} today={today} />
                   </div>
-                </div>
+                </Link>
 
                 <button
                   type="button"
