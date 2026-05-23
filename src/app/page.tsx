@@ -1,6 +1,7 @@
 "use client";
 
 import { HabitCard } from "@/components/habits/habit-card";
+import { ProfileOnboarding } from "@/components/onboarding/profile-onboarding";
 import {
   dateKey,
   fromDateKey,
@@ -12,6 +13,7 @@ import {
   fetchHabits,
   toggleHabitCompletion,
 } from "@/lib/habit-service";
+import { fetchProfile, type Profile } from "@/lib/profile-service";
 import { supabase } from "@/lib/supabase";
 import type { Habit } from "@/types/habit";
 import Link from "next/link";
@@ -95,6 +97,8 @@ export default function HomePage() {
   const [today, setToday] = useState("");
   const [formattedDate, setFormattedDate] = useState("Today");
   const [userId, setUserId] = useState("");
+  const [username, setUsername] = useState("");
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -139,6 +143,24 @@ export default function HomePage() {
       }
 
       setUserId(session.user.id);
+      try {
+        const profile = await fetchProfile(session.user.id);
+
+        if (cancelled) return;
+
+        if (profile) {
+          setUsername(profile.username);
+          setNeedsOnboarding(false);
+        } else {
+          setUsername("");
+          setNeedsOnboarding(true);
+        }
+      } catch (error) {
+        if (cancelled) return;
+
+        console.error(error);
+        setErrorMessage("Could not load profile from Supabase.");
+      }
       loadHabits(session.user.id);
     }
 
@@ -159,6 +181,12 @@ export default function HomePage() {
       subscription.unsubscribe();
     };
   }, [router]);
+
+  function completeOnboarding(profile: Profile) {
+    setUsername(profile.username);
+    setNeedsOnboarding(false);
+    setErrorMessage("");
+  }
 
   const activeToday = today || dateKey();
   const dueHabitsToday = getDueHabitsForDate(habits, activeToday);
@@ -213,6 +241,9 @@ export default function HomePage() {
 
   return (
     <main className="min-h-dvh bg-[#030504] font-sans text-[#f4f7f1]">
+      {needsOnboarding && userId && (
+        <ProfileOnboarding userId={userId} onComplete={completeOnboarding} />
+      )}
       <div className="relative mx-auto min-h-dvh w-full max-w-[430px] overflow-hidden bg-[radial-gradient(circle_at_50%_-10%,rgba(190,255,79,0.20),transparent_34%),linear-gradient(180deg,#111610_0%,#050706_42%,#020302_100%)] shadow-[0_24px_90px_rgba(0,0,0,0.65)]">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(circle_at_85%_10%,rgba(190,255,79,0.18),transparent_32%)]" />
         <section className="relative flex min-h-dvh flex-col px-5 pb-28 pt-5">
@@ -227,7 +258,7 @@ export default function HomePage() {
                   Good morning
                 </p>
                 <h1 className="mt-1 text-[40px] font-bold leading-none tracking-[-0.04em]">
-                  Jonas
+                  {username}
                 </h1>
               </div>
 

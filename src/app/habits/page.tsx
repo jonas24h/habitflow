@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 
 import { HabitForm } from "@/components/habits/habit-form";
 import { HabitManagementList } from "@/components/habits/habit-management-list";
+import { ProfileOnboarding } from "@/components/onboarding/profile-onboarding";
 import { dateKey } from "@/lib/habits";
 import {
   createHabit as createHabitInSupabase,
@@ -15,6 +16,7 @@ import {
   fetchHabits,
   updateHabit as updateHabitInSupabase,
 } from "@/lib/habit-service";
+import { fetchProfile } from "@/lib/profile-service";
 import { supabase } from "@/lib/supabase";
 import type { Habit, HabitSchedule } from "@/types/habit";
 
@@ -23,6 +25,7 @@ export default function HabitsPage() {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [today, setToday] = useState("");
   const [userId, setUserId] = useState("");
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -64,6 +67,18 @@ export default function HabitsPage() {
       }
 
       setUserId(session.user.id);
+      try {
+        const profile = await fetchProfile(session.user.id);
+
+        if (cancelled) return;
+
+        setNeedsOnboarding(!profile);
+      } catch (error) {
+        if (cancelled) return;
+
+        console.error(error);
+        setErrorMessage("Could not load profile from Supabase.");
+      }
       loadHabits(session.user.id);
     }
 
@@ -84,6 +99,11 @@ export default function HabitsPage() {
       subscription.unsubscribe();
     };
   }, [router]);
+
+  function completeOnboarding() {
+    setNeedsOnboarding(false);
+    setErrorMessage("");
+  }
 
   async function addHabit(values: { name: string; schedule: HabitSchedule }) {
     if (!userId) return;
@@ -147,6 +167,9 @@ export default function HabitsPage() {
 
   return (
     <main className="min-h-dvh bg-[#030504] font-sans text-[#f4f7f1]">
+      {needsOnboarding && userId && (
+        <ProfileOnboarding userId={userId} onComplete={completeOnboarding} />
+      )}
       <div className="relative mx-auto min-h-dvh w-full max-w-[430px] overflow-hidden bg-[radial-gradient(circle_at_50%_-10%,rgba(190,255,79,0.20),transparent_34%),linear-gradient(180deg,#111610_0%,#050706_42%,#020302_100%)] shadow-[0_24px_90px_rgba(0,0,0,0.65)]">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(circle_at_85%_10%,rgba(190,255,79,0.18),transparent_32%)]" />
         <section className="relative flex min-h-dvh flex-col px-5 pb-28 pt-5">
