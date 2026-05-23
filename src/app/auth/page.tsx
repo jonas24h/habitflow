@@ -113,10 +113,10 @@ export default function AuthPage() {
               HabitFlow
             </p>
             <h1 className="mt-2 text-[46px] font-black leading-none tracking-[-0.06em] text-white">
-              Welcome back
+              Welcome to HabitFlow
             </h1>
             <p className="mt-4 max-w-[300px] text-[15px] font-medium leading-6 text-[#8c9686]">
-              Sign in to sync your habits with Supabase.
+              Sign in or create an account to continue.
             </p>
           </div>
 

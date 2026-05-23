@@ -28,7 +28,7 @@ const MONTH_FORMATTER = new Intl.DateTimeFormat("en", {
 const WEEKDAY_FORMATTER = new Intl.DateTimeFormat("en", {
   weekday: "short",
 });
-const WEEKDAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
+const WEEKDAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
 const WEEKDAY_PLACEHOLDERS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 type DayOverview = {
@@ -161,7 +161,7 @@ function getDayOverview(habits: Habit[], key: string): DayOverview {
 }
 
 function getMonthlyHeatmap(habits: Habit[], month: Date) {
-  const firstWeekday = getMonthStart(month).getDay();
+  const firstWeekday = (getMonthStart(month).getDay() + 6) % 7;
   const blanks = Array.from({ length: firstWeekday }, () => null);
   const days = getMonthDateKeys(month).map((key) => getDayOverview(habits, key));
 

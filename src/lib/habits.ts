@@ -10,6 +10,7 @@ const FULL_WEEKDAY_LABELS = [
   "Friday",
   "Saturday",
 ];
+const DISPLAY_WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
 export const HABIT_STORAGE_KEY = "habitflow-habits";
 
@@ -166,7 +167,9 @@ export function getHabitScheduleLabel(habit: Habit, key: string) {
       return `${remaining} time${remaining === 1 ? "" : "s"} left this week`;
     }
     case "specific_days": {
-      const days = schedule.weekdays
+      const scheduledWeekdays = new Set(schedule.weekdays);
+      const days = DISPLAY_WEEKDAY_ORDER
+        .filter((weekday) => scheduledWeekdays.has(weekday))
         .map((weekday) => WEEKDAY_LABELS[weekday])
         .filter(Boolean);
 

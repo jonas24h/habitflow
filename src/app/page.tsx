@@ -36,6 +36,14 @@ const DATE_FORMATTER = new Intl.DateTimeFormat("en", {
   day: "numeric",
 });
 
+function getGreeting(date = new Date()) {
+  const hour = date.getHours();
+
+  if (hour >= 5 && hour < 12) return "Good morning";
+  if (hour >= 12 && hour < 18) return "Good afternoon";
+  return "Good evening";
+}
+
 function getHabitsForDateOverview(habits: Habit[], key: string) {
   if (!key) return [];
 
@@ -104,6 +112,7 @@ export default function HomePage() {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [today, setToday] = useState("");
   const [formattedDate, setFormattedDate] = useState("Today");
+  const [greeting, setGreeting] = useState("Hi");
   const [userId, setUserId] = useState("");
   const [username, setUsername] = useState("");
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
@@ -118,6 +127,7 @@ export default function HomePage() {
 
       setToday(dateKey(currentDate));
       setFormattedDate(DATE_FORMATTER.format(currentDate));
+      setGreeting(getGreeting(currentDate));
 
       try {
         const nextHabits = await fetchHabits(nextUserId);
@@ -284,7 +294,7 @@ export default function HomePage() {
                   {formattedDate}
                 </p>
                 <p className="mt-3 text-[15px] font-medium text-[#8c9686]">
-                  Good morning
+                  {greeting}
                 </p>
                 <h1 className="mt-1 text-[40px] font-bold leading-none tracking-[-0.04em]">
                   {username}

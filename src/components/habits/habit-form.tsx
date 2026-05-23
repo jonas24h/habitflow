@@ -8,13 +8,13 @@ import { AnimatePresence, motion } from "framer-motion";
 import type { Habit, HabitSchedule } from "@/types/habit";
 
 const WEEKDAYS = [
-  { label: "S", value: 0 },
   { label: "M", value: 1 },
   { label: "T", value: 2 },
   { label: "W", value: 3 },
   { label: "T", value: 4 },
   { label: "F", value: 5 },
   { label: "S", value: 6 },
+  { label: "S", value: 0 },
 ];
 
 function scheduleDefaults(schedule?: HabitSchedule) {
