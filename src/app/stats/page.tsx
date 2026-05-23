@@ -58,10 +58,12 @@ function getLastSevenDays(today: string) {
   }
 
   const date = fromDateKey(today);
+  const monday = new Date(date);
+  monday.setDate(date.getDate() - ((date.getDay() + 6) % 7));
 
   return Array.from({ length: 7 }, (_, index) => {
-    const day = new Date(date);
-    day.setDate(date.getDate() - (6 - index));
+    const day = new Date(monday);
+    day.setDate(monday.getDate() + index);
 
     const key = dateKey(day);
 
