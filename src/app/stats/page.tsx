@@ -2,66 +2,60 @@
 
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { ProfileOnboarding } from "@/components/onboarding/profile-onboarding";
-import {
-  dateKey,
-  fromDateKey,
-  getDueHabitsForDate,
-  isHabitDueOnDate,
-} from "@/lib/habits";
+import { dateKey, fromDateKey, isHabitDueOnDate } from "@/lib/habits";
 import { fetchHabits } from "@/lib/habit-service";
 import { fetchProfile } from "@/lib/profile-service";
 import { supabase } from "@/lib/supabase";
 import type { Habit } from "@/types/habit";
 import { motion } from "framer-motion";
-import { CalendarDays, CheckCircle2, Flame, Percent, Trophy } from "lucide-react";
+import {
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  Flame,
+  Trophy,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
-const WEEKDAY_FORMATTER = new Intl.DateTimeFormat("en", { weekday: "short" });
 const MONTH_FORMATTER = new Intl.DateTimeFormat("en", {
   month: "long",
   year: "numeric",
 });
+const WEEKDAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
 
 type DayOverview = {
   key: string;
-  label: string;
   completed: number;
   total: number;
   percent: number;
 };
 
-function getHabitsForDateOverview(habits: Habit[], key: string) {
-  const dueHabits = getDueHabitsForDate(habits, key);
-  const habitsById = new Map(dueHabits.map((habit) => [habit.id, habit]));
+type HabitInsight = {
+  id: string;
+  name: string;
+  completed: number;
+  due: number;
+  percent: number;
+  status: "Strong" | "Steady" | "Needs attention";
+};
 
-  habits.forEach((habit) => {
-    if (!habit.completedDates.includes(key)) return;
-
-    const wasDueBeforeCompletion = isHabitDueOnDate(
-      {
-        ...habit,
-        completedDates: habit.completedDates.filter((date) => date !== key),
-      },
-      key
-    );
-
-    if (wasDueBeforeCompletion) {
-      habitsById.set(habit.id, habit);
-    }
-  });
-
-  return Array.from(habitsById.values());
+function getMonthStart(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
 }
 
-function getDateRange(endKey: string, days: number) {
-  const end = fromDateKey(endKey);
+function getMonthKey(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
 
-  return Array.from({ length: days }, (_, index) => {
-    const day = new Date(end);
-    day.setDate(end.getDate() - (days - 1 - index));
-    return dateKey(day);
-  });
+function getMonthDateKeys(month: Date) {
+  const year = month.getFullYear();
+  const monthIndex = month.getMonth();
+  const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+
+  return Array.from({ length: daysInMonth }, (_, index) =>
+    dateKey(new Date(year, monthIndex, index + 1))
+  );
 }
 
 function getCheckInDates(habits: Habit[]) {
@@ -102,8 +96,35 @@ function getBestStreak(completedDateKeys: Set<string>) {
   return best;
 }
 
+function isHabitDueForAnalytics(habit: Habit, key: string) {
+  const completedBeforeOrOnDate = habit.completedDates.filter(
+    (completedDate) => completedDate <= key
+  );
+  const completedBeforeDate = completedBeforeOrOnDate.filter(
+    (completedDate) => completedDate !== key
+  );
+
+  if (completedBeforeOrOnDate.includes(key)) {
+    return isHabitDueOnDate(
+      {
+        ...habit,
+        completedDates: completedBeforeDate,
+      },
+      key
+    );
+  }
+
+  return isHabitDueOnDate(
+    {
+      ...habit,
+      completedDates: completedBeforeOrOnDate,
+    },
+    key
+  );
+}
+
 function getDayOverview(habits: Habit[], key: string): DayOverview {
-  const dueHabits = getHabitsForDateOverview(habits, key);
+  const dueHabits = habits.filter((habit) => isHabitDueForAnalytics(habit, key));
   const completed = dueHabits.filter((habit) =>
     habit.completedDates.includes(key)
   ).length;
@@ -112,36 +133,73 @@ function getDayOverview(habits: Habit[], key: string): DayOverview {
 
   return {
     key,
-    label: WEEKDAY_FORMATTER.format(fromDateKey(key)).slice(0, 3),
     completed,
     total: dueHabits.length,
     percent,
   };
 }
 
-function getMonthlyHeatmap(habits: Habit[], today: string) {
-  const currentDate = fromDateKey(today);
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const firstWeekday = new Date(year, month, 1).getDay();
+function getMonthlyHeatmap(habits: Habit[], month: Date) {
+  const firstWeekday = getMonthStart(month).getDay();
   const blanks = Array.from({ length: firstWeekday }, () => null);
-  const days = Array.from({ length: daysInMonth }, (_, index) =>
-    getDayOverview(habits, dateKey(new Date(year, month, index + 1)))
-  );
+  const days = getMonthDateKeys(month).map((key) => getDayOverview(habits, key));
 
   return {
-    label: MONTH_FORMATTER.format(currentDate),
+    label: MONTH_FORMATTER.format(month),
     cells: [...blanks, ...days],
   };
 }
 
-function heatClass(percent: number) {
-  if (percent >= 90) return "bg-[#c6ff3d] shadow-[0_0_14px_rgba(198,255,61,0.35)]";
-  if (percent >= 60) return "bg-[#9bd737]";
-  if (percent >= 30) return "bg-[#58752b]";
-  if (percent > 0) return "bg-[#26351b]";
-  return "bg-white/[0.08]";
+function getHabitStatus(percent: number): HabitInsight["status"] {
+  if (percent >= 80) return "Strong";
+  if (percent >= 50) return "Steady";
+  return "Needs attention";
+}
+
+function getHabitInsights(habits: Habit[], month: Date) {
+  const monthKeys = getMonthDateKeys(month);
+
+  return habits
+    .map((habit): HabitInsight => {
+      const dueKeys = monthKeys.filter((key) =>
+        isHabitDueForAnalytics(habit, key)
+      );
+      const completed = dueKeys.filter((key) =>
+        habit.completedDates.includes(key)
+      ).length;
+      const percent =
+        dueKeys.length === 0 ? 0 : Math.round((completed / dueKeys.length) * 100);
+
+      return {
+        id: habit.id,
+        name: habit.name,
+        completed,
+        due: dueKeys.length,
+        percent,
+        status: getHabitStatus(percent),
+      };
+    })
+    .sort((a, b) => a.percent - b.percent || b.due - a.due);
+}
+
+function heatClass(day: DayOverview) {
+  if (day.total === 0) return "bg-white/[0.05]";
+  if (day.percent >= 90) return "bg-[#c6ff3d] shadow-[0_0_14px_rgba(198,255,61,0.35)]";
+  if (day.percent >= 60) return "bg-[#9bd737]";
+  if (day.percent >= 30) return "bg-[#58752b]";
+  if (day.percent > 0) return "bg-[#26351b]";
+  return "bg-white/[0.10]";
+}
+
+function statusClass(status: HabitInsight["status"]) {
+  switch (status) {
+    case "Strong":
+      return "bg-[#c6ff3d]/15 text-[#d8ff69] ring-[#c6ff3d]/20";
+    case "Steady":
+      return "bg-white/[0.08] text-[#c4ccb9] ring-white/10";
+    case "Needs attention":
+      return "bg-[#ffb86b]/12 text-[#ffd3a1] ring-[#ffb86b]/20";
+  }
 }
 
 export default function StatsPage() {
@@ -151,7 +209,13 @@ export default function StatsPage() {
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState(() =>
+    getMonthStart(new Date())
+  );
   const today = dateKey();
+  const currentMonth = getMonthStart(new Date());
+  const isCurrentMonth =
+    getMonthKey(selectedMonth) === getMonthKey(currentMonth);
 
   useEffect(() => {
     let cancelled = false;
@@ -225,63 +289,45 @@ export default function StatsPage() {
   }, [router]);
 
   const stats = useMemo(() => {
-    const checkInDates = getCheckInDates(habits);
-    const completedDateKeys = new Set(checkInDates);
-    const lastThirtyDays = getDateRange(today, 30).map((key) =>
-      getDayOverview(habits, key)
-    );
-    const completedOpportunities = lastThirtyDays.reduce(
-      (sum, day) => sum + day.completed,
-      0
-    );
-    const totalOpportunities = lastThirtyDays.reduce(
-      (sum, day) => sum + day.total,
-      0
-    );
-    const completionRate =
-      totalOpportunities === 0
-        ? 0
-        : Math.round((completedOpportunities / totalOpportunities) * 100);
+    const completedDateKeys = new Set(getCheckInDates(habits));
 
     return {
       currentStreak: getCurrentStreak(completedDateKeys, today),
       bestStreak: getBestStreak(completedDateKeys),
-      completionRate,
-      totalCheckIns: checkInDates.length,
-      lastSevenDays: lastThirtyDays.slice(-7),
-      heatmap: getMonthlyHeatmap(habits, today),
+      heatmap: getMonthlyHeatmap(habits, selectedMonth),
+      habitInsights: getHabitInsights(habits, selectedMonth),
     };
-  }, [habits, today]);
+  }, [habits, selectedMonth, today]);
 
   function completeOnboarding() {
     setNeedsOnboarding(false);
     setErrorMessage("");
   }
 
+  function showPreviousMonth() {
+    setSelectedMonth(
+      (month) => new Date(month.getFullYear(), month.getMonth() - 1, 1)
+    );
+  }
+
+  function showNextMonth() {
+    setSelectedMonth((month) => {
+      const nextMonth = new Date(month.getFullYear(), month.getMonth() + 1, 1);
+
+      return nextMonth > currentMonth ? month : nextMonth;
+    });
+  }
+
   const statCards = [
     {
       label: "Current streak",
       value: stats.currentStreak,
-      suffix: "d",
       icon: Flame,
     },
     {
       label: "Best streak",
       value: stats.bestStreak,
-      suffix: "d",
       icon: Trophy,
-    },
-    {
-      label: "Completion",
-      value: stats.completionRate,
-      suffix: "%",
-      icon: Percent,
-    },
-    {
-      label: "Check-ins",
-      value: stats.totalCheckIns,
-      suffix: "",
-      icon: CheckCircle2,
     },
   ];
 
@@ -296,13 +342,13 @@ export default function StatsPage() {
           <header className="-mx-5 px-5 pb-5 pt-3">
             <p className="flex items-center gap-1.5 text-[13px] font-semibold text-[#8c9686]">
               <CalendarDays size={15} />
-              Last 30 days
+              Habit analytics
             </p>
             <h1 className="mt-3 text-[44px] font-black leading-none tracking-[-0.06em] text-white">
               Stats
             </h1>
-            <p className="mt-3 max-w-[300px] text-[15px] font-medium leading-6 text-[#8c9686]">
-              Momentum, streaks, and check-ins across your habit flow.
+            <p className="mt-3 max-w-[320px] text-[15px] font-medium leading-6 text-[#8c9686]">
+              See consistency over time and spot the habits that need more care.
             </p>
           </header>
 
@@ -339,11 +385,9 @@ export default function StatsPage() {
                       <div className="flex h-11 w-11 items-center justify-center rounded-[18px] bg-[#c6ff3d]/15 text-[#d8ff69] ring-1 ring-[#c6ff3d]/20">
                         <Icon size={20} />
                       </div>
-                      <p className="mt-5 text-[40px] font-black leading-none tracking-[-0.06em] text-white">
+                      <p className="mt-5 text-[44px] font-black leading-none tracking-[-0.06em] text-white">
                         {card.value}
-                        <span className="text-[20px] text-[#c6ff3d]">
-                          {card.suffix}
-                        </span>
+                        <span className="text-[20px] text-[#c6ff3d]">d</span>
                       </p>
                       <p className="mt-2 text-[13px] font-semibold text-[#8c9686]">
                         {card.label}
@@ -354,73 +398,126 @@ export default function StatsPage() {
               </section>
 
               <section className="mt-4 rounded-[34px] border border-white/10 bg-white/[0.07] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.24)] backdrop-blur-2xl">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[13px] font-semibold text-[#8c9686]">
-                      Last 7 days
-                    </p>
-                    <h2 className="mt-1 text-[22px] font-black tracking-[-0.035em] text-white">
-                      Daily rhythm
-                    </h2>
-                  </div>
-                  <p className="rounded-full bg-[#c6ff3d]/15 px-3 py-1.5 text-[13px] font-bold text-[#d8ff69] ring-1 ring-[#c6ff3d]/20">
-                    {stats.completionRate}%
-                  </p>
-                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <button
+                    type="button"
+                    onClick={showPreviousMonth}
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[18px] border border-white/10 bg-black/20 text-[#c4ccb9] transition active:scale-95"
+                    aria-label="Show previous month"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
 
-                <div className="mt-5 grid grid-cols-7 gap-2">
-                  {stats.lastSevenDays.map((day) => (
-                    <div
-                      key={day.key}
-                      className="flex min-w-0 flex-col items-center rounded-[20px] bg-black/15 px-1.5 py-2.5"
-                    >
-                      <p className="text-[11px] font-semibold text-[#808a7c]">
-                        {day.label}
-                      </p>
-                      <div className="mt-2 flex h-20 w-5 items-end overflow-hidden rounded-full bg-white/[0.10]">
-                        <motion.div
-                          initial={{ height: 0 }}
-                          animate={{ height: `${day.percent}%` }}
-                          transition={{
-                            duration: 0.55,
-                            ease: [0.22, 1, 0.36, 1],
-                          }}
-                          className="w-full rounded-full bg-[#c6ff3d] shadow-[0_0_14px_rgba(198,255,61,0.45)]"
-                        />
-                      </div>
-                      <p className="mt-2 text-[11px] font-semibold text-[#8c9686]">
-                        {day.percent}%
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              <section className="mt-4 rounded-[34px] border border-white/10 bg-white/[0.07] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.24)] backdrop-blur-2xl">
-                <div className="flex items-center justify-between">
-                  <div>
+                  <div className="min-w-0 text-center">
                     <p className="text-[13px] font-semibold text-[#8c9686]">
                       Monthly heatmap
                     </p>
-                    <h2 className="mt-1 text-[22px] font-black tracking-[-0.035em] text-white">
+                    <h2 className="mt-1 truncate text-[22px] font-black tracking-[-0.035em] text-white">
                       {stats.heatmap.label}
                     </h2>
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={showNextMonth}
+                    disabled={isCurrentMonth}
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[18px] border border-white/10 bg-black/20 text-[#c4ccb9] transition active:scale-95 disabled:opacity-35"
+                    aria-label="Show next month"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
                 </div>
 
                 <div className="mt-5 grid grid-cols-7 gap-2">
+                  {WEEKDAY_LABELS.map((label, index) => (
+                    <p
+                      key={`${label}-${index}`}
+                      className="text-center text-[11px] font-bold text-[#6f7a68]"
+                    >
+                      {label}
+                    </p>
+                  ))}
                   {stats.heatmap.cells.map((cell, index) =>
                     cell ? (
                       <div
                         key={cell.key}
-                        className={`aspect-square rounded-[10px] ${heatClass(cell.percent)}`}
-                        title={`${cell.key}: ${cell.percent}%`}
+                        className={`aspect-square rounded-[10px] ${heatClass(cell)}`}
+                        title={`${cell.key}: ${cell.completed}/${cell.total}`}
                       />
                     ) : (
                       <div key={`blank-${index}`} className="aspect-square" />
                     )
                   )}
                 </div>
+              </section>
+
+              <section className="mt-7 flex flex-col gap-3.5">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-[24px] font-black tracking-[-0.035em] text-white">
+                    Habit insights
+                  </h2>
+                  <p className="text-sm font-semibold text-[#8c9686]">
+                    {stats.habitInsights.length} habits
+                  </p>
+                </div>
+
+                {stats.habitInsights.length === 0 && (
+                  <div className="rounded-[34px] border border-dashed border-white/15 bg-white/[0.06] p-8 text-center shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur-2xl">
+                    <p className="text-lg font-bold tracking-[-0.02em] text-white">
+                      No habits yet
+                    </p>
+                    <p className="mt-2 text-sm font-medium text-[#8c9686]">
+                      Add habits to see monthly consistency insights.
+                    </p>
+                  </div>
+                )}
+
+                {stats.habitInsights.map((habit, index) => (
+                  <motion.article
+                    key={habit.id}
+                    initial={{ opacity: 0, y: 12, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{
+                      delay: index * 0.035,
+                      duration: 0.28,
+                      ease: [0.22, 1, 0.36, 1],
+                    }}
+                    className="rounded-[30px] border border-white/10 bg-white/[0.07] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.24)] backdrop-blur-2xl"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h3 className="truncate text-[18px] font-black tracking-[-0.025em] text-white">
+                          {habit.name}
+                        </h3>
+                        <p className="mt-1 text-[13px] font-semibold text-[#8c9686]">
+                          {habit.completed} of {habit.due} due
+                        </p>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <p className="text-[26px] font-black leading-none tracking-[-0.05em] text-white">
+                          {habit.percent}
+                          <span className="text-[14px] text-[#c6ff3d]">%</span>
+                        </p>
+                        <p
+                          className={`mt-2 rounded-full px-2.5 py-1 text-[11px] font-black ring-1 ${statusClass(habit.status)}`}
+                        >
+                          {habit.status}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-white/[0.10]">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${habit.percent}%` }}
+                        transition={{
+                          duration: 0.45,
+                          ease: [0.22, 1, 0.36, 1],
+                        }}
+                        className="h-full rounded-full bg-[#c6ff3d] shadow-[0_0_16px_rgba(198,255,61,0.40)]"
+                      />
+                    </div>
+                  </motion.article>
+                ))}
               </section>
             </>
           )}
