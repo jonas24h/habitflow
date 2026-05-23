@@ -2,105 +2,148 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowLeft, BarChart3, Home, Plus } from "lucide-react";
+import { ArrowLeft, BarChart3, Home, LogOut, Plus } from "lucide-react";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 import { HabitForm } from "@/components/habits/habit-form";
 import { HabitManagementList } from "@/components/habits/habit-management-list";
+import { dateKey } from "@/lib/habits";
 import {
-  dateKey,
-  HABIT_STORAGE_KEY,
-  normalizeHabitSchedule,
-  STARTER_HABITS,
-} from "@/lib/habits";
+  createHabit as createHabitInSupabase,
+  deleteHabit as deleteHabitFromSupabase,
+  fetchHabits,
+  updateHabit as updateHabitInSupabase,
+} from "@/lib/habit-service";
+import { supabase } from "@/lib/supabase";
 import type { Habit, HabitSchedule } from "@/types/habit";
 
-function createHabit(name: string, schedule: HabitSchedule): Habit {
-  return {
-    id:
-      typeof crypto !== "undefined" && "randomUUID" in crypto
-        ? crypto.randomUUID()
-        : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    name,
-    createdAt: new Date().toISOString(),
-    completedDates: [],
-    schedule,
-  };
-}
-
-function readStoredHabits() {
-  try {
-    if (typeof window === "undefined") return STARTER_HABITS;
-
-    const stored = localStorage.getItem(HABIT_STORAGE_KEY);
-    if (!stored) return STARTER_HABITS;
-
-    const parsed = JSON.parse(stored);
-    if (!Array.isArray(parsed)) return STARTER_HABITS;
-
-    return parsed
-      .filter(
-        (habit): habit is Omit<Habit, "schedule"> & {
-          schedule?: HabitSchedule;
-        } =>
-          typeof habit?.id === "string" &&
-          typeof habit?.name === "string" &&
-          typeof habit?.createdAt === "string" &&
-          Array.isArray(habit?.completedDates)
-      )
-      .map((habit) => ({
-        ...habit,
-        schedule: normalizeHabitSchedule(habit.schedule),
-      }));
-  } catch {
-    return STARTER_HABITS;
-  }
-}
-
 export default function HabitsPage() {
-  const [habits, setHabits] = useState<Habit[]>(STARTER_HABITS);
+  const router = useRouter();
+  const [habits, setHabits] = useState<Habit[]>([]);
   const [today, setToday] = useState("");
-  const [hasHydrated, setHasHydrated] = useState(false);
+  const [userId, setUserId] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    const hydrate = window.setTimeout(() => {
+    let cancelled = false;
+
+    async function loadHabits(nextUserId: string) {
       setToday(dateKey());
-      setHabits(readStoredHabits());
-      setHasHydrated(true);
-    }, 0);
 
-    return () => window.clearTimeout(hydrate);
-  }, []);
+      try {
+        const nextHabits = await fetchHabits(nextUserId);
 
-  useEffect(() => {
-    if (!hasHydrated) return;
+        if (cancelled) return;
 
-    localStorage.setItem(HABIT_STORAGE_KEY, JSON.stringify(habits));
-  }, [habits, hasHydrated]);
+        setHabits(nextHabits);
+        setErrorMessage("");
+      } catch (error) {
+        if (cancelled) return;
 
-  function addHabit(values: { name: string; schedule: HabitSchedule }) {
-    setHabits((current) => [
-      createHabit(values.name, values.schedule),
-      ...current,
-    ]);
+        console.error(error);
+        setErrorMessage("Could not load habits from Supabase.");
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    async function checkSession() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (cancelled) return;
+
+      if (!session) {
+        router.replace("/auth");
+        return;
+      }
+
+      setUserId(session.user.id);
+      loadHabits(session.user.id);
+    }
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (cancelled) return;
+
+      if (event === "SIGNED_OUT" || !session) {
+        router.replace("/auth");
+      }
+    });
+
+    checkSession();
+
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
+  }, [router]);
+
+  async function addHabit(values: { name: string; schedule: HabitSchedule }) {
+    if (!userId) return;
+
+    try {
+      const habit = await createHabitInSupabase(
+        userId,
+        values.name,
+        values.schedule
+      );
+      setHabits((current) => [habit, ...current]);
+      setErrorMessage("");
+    } catch (error) {
+      console.error(error);
+      setErrorMessage("Could not create habit.");
+    }
   }
 
-  function updateHabit(
+  async function updateHabit(
     id: string,
     values: { name: string; schedule: HabitSchedule }
   ) {
-    setHabits((current) =>
-      current.map((habit) =>
-        habit.id === id
-          ? { ...habit, name: values.name, schedule: values.schedule }
-          : habit
-      )
-    );
+    if (!userId) return;
+
+    try {
+      const updatedHabit = await updateHabitInSupabase(userId, id, values);
+
+      setHabits((current) =>
+        current.map((habit) =>
+          habit.id === id
+            ? { ...updatedHabit, completedDates: habit.completedDates }
+            : habit
+        )
+      );
+      setErrorMessage("");
+    } catch (error) {
+      console.error(error);
+      setErrorMessage("Could not update habit.");
+    }
   }
 
-  function deleteHabit(id: string) {
-    setHabits((current) => current.filter((habit) => habit.id !== id));
+  async function deleteHabit(id: string) {
+    if (!userId) return;
+
+    try {
+      await deleteHabitFromSupabase(userId, id);
+      setHabits((current) => current.filter((habit) => habit.id !== id));
+      setErrorMessage("");
+    } catch (error) {
+      console.error(error);
+      setErrorMessage("Could not delete habit.");
+    }
   }
+
+  async function signOut() {
+    await supabase.auth.signOut();
+    router.replace("/auth");
+  }
+
+  const visibleHabits = isLoading ? [] : habits;
 
   return (
     <main className="min-h-dvh bg-[#030504] font-sans text-[#f4f7f1]">
@@ -123,9 +166,17 @@ export default function HabitsPage() {
               </div>
 
               <div className="flex h-[52px] min-w-[52px] items-center justify-center rounded-[22px] border border-white/10 bg-white/[0.08] px-3 text-[13px] font-black text-[#d8ff69] shadow-[0_10px_30px_rgba(190,255,79,0.12)] backdrop-blur-xl">
-                {habits.length}
+                {visibleHabits.length}
               </div>
             </div>
+            <button
+              type="button"
+              onClick={signOut}
+              className="mt-4 inline-flex h-10 items-center gap-2 rounded-[18px] border border-white/10 bg-white/[0.07] px-3 text-[13px] font-bold text-[#8c9686] transition active:scale-95"
+            >
+              <LogOut size={15} />
+              Logout
+            </button>
           </header>
 
           <motion.section
@@ -143,16 +194,32 @@ export default function HabitsPage() {
                 All habits
               </h2>
               <p className="text-sm font-semibold text-[#8c9686]">
-                {habits.length} active
+                {isLoading ? "Loading" : `${visibleHabits.length} active`}
               </p>
             </div>
 
-            <HabitManagementList
-              habits={habits}
-              today={today}
-              onUpdate={updateHabit}
-              onDelete={deleteHabit}
-            />
+            {isLoading && (
+              <div className="rounded-[34px] border border-white/10 bg-white/[0.07] p-6 text-center shadow-[0_18px_50px_rgba(0,0,0,0.24)] backdrop-blur-2xl">
+                <p className="text-sm font-semibold text-[#8c9686]">
+                  Loading habits...
+                </p>
+              </div>
+            )}
+
+            {errorMessage && (
+              <div className="rounded-[26px] border border-[#ff6b6b]/20 bg-[#ff6b6b]/10 px-4 py-3 text-sm font-semibold text-[#ffb3b3]">
+                {errorMessage}
+              </div>
+            )}
+
+            {!isLoading && (
+              <HabitManagementList
+                habits={visibleHabits}
+                today={today}
+                onUpdate={updateHabit}
+                onDelete={deleteHabit}
+              />
+            )}
           </section>
 
           <nav className="fixed bottom-4 left-1/2 z-30 grid w-[calc(100%-40px)] max-w-[390px] -translate-x-1/2 grid-cols-3 rounded-[30px] border border-white/10 bg-[#11170f]/85 p-2 shadow-[0_18px_50px_rgba(0,0,0,0.45)] backdrop-blur-2xl">

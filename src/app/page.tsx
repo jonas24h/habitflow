@@ -5,15 +5,26 @@ import {
   dateKey,
   fromDateKey,
   getDueHabitsForDate,
-  HABIT_STORAGE_KEY,
   isHabitDueOnDate,
-  normalizeHabitSchedule,
-  STARTER_HABITS,
 } from "@/lib/habits";
-import type { Habit, HabitSchedule } from "@/types/habit";
+import {
+  deleteHabit as deleteHabitFromSupabase,
+  fetchHabits,
+  toggleHabitCompletion,
+} from "@/lib/habit-service";
+import { supabase } from "@/lib/supabase";
+import type { Habit } from "@/types/habit";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { BarChart3, CalendarDays, CheckCircle2, Dumbbell, Home, Plus } from "lucide-react";
+import {
+  BarChart3,
+  CalendarDays,
+  CheckCircle2,
+  Dumbbell,
+  Home,
+  Plus,
+} from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 const DATE_FORMATTER = new Intl.DateTimeFormat("en", {
@@ -53,35 +64,6 @@ function getLastSevenDays(today: string) {
   });
 }
 
-function readStoredHabits() {
-  try {
-    if (typeof window === "undefined") return STARTER_HABITS;
-
-    const stored = localStorage.getItem(HABIT_STORAGE_KEY);
-    if (!stored) return STARTER_HABITS;
-
-    const parsed = JSON.parse(stored);
-    if (!Array.isArray(parsed)) return STARTER_HABITS;
-
-    return parsed
-      .filter(
-        (habit): habit is Omit<Habit, "schedule"> & {
-          schedule?: HabitSchedule;
-        } =>
-        typeof habit?.id === "string" &&
-        typeof habit?.name === "string" &&
-        typeof habit?.createdAt === "string" &&
-        Array.isArray(habit?.completedDates)
-      )
-      .map((habit) => ({
-        ...habit,
-        schedule: normalizeHabitSchedule(habit.schedule),
-      }));
-  } catch {
-    return STARTER_HABITS;
-  }
-}
-
 function getHabitsForDateOverview(habits: Habit[], key: string) {
   if (!key) return [];
 
@@ -108,29 +90,75 @@ function getHabitsForDateOverview(habits: Habit[], key: string) {
 }
 
 export default function HomePage() {
-  const [habits, setHabits] = useState<Habit[]>(STARTER_HABITS);
+  const router = useRouter();
+  const [habits, setHabits] = useState<Habit[]>([]);
   const [today, setToday] = useState("");
   const [formattedDate, setFormattedDate] = useState("Today");
-  const [hasHydrated, setHasHydrated] = useState(false);
+  const [userId, setUserId] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    const hydrate = window.setTimeout(() => {
+    let cancelled = false;
+
+    async function loadHabits(nextUserId: string) {
       const currentDate = new Date();
 
       setToday(dateKey(currentDate));
       setFormattedDate(DATE_FORMATTER.format(currentDate));
-      setHabits(readStoredHabits());
-      setHasHydrated(true);
-    }, 0);
 
-    return () => window.clearTimeout(hydrate);
-  }, []);
+      try {
+        const nextHabits = await fetchHabits(nextUserId);
 
-  useEffect(() => {
-    if (!hasHydrated) return;
+        if (cancelled) return;
 
-    localStorage.setItem(HABIT_STORAGE_KEY, JSON.stringify(habits));
-  }, [habits, hasHydrated]);
+        setHabits(nextHabits);
+        setErrorMessage("");
+      } catch (error) {
+        if (cancelled) return;
+
+        console.error(error);
+        setErrorMessage("Could not load habits from Supabase.");
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    async function checkSession() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (cancelled) return;
+
+      if (!session) {
+        router.replace("/auth");
+        return;
+      }
+
+      setUserId(session.user.id);
+      loadHabits(session.user.id);
+    }
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (cancelled) return;
+
+      if (event === "SIGNED_OUT" || !session) {
+        router.replace("/auth");
+      }
+    });
+
+    checkSession();
+
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
+  }, [router]);
 
   const activeToday = today || dateKey();
   const dueHabitsToday = getDueHabitsForDate(habits, activeToday);
@@ -149,27 +177,38 @@ export default function HomePage() {
       ? 0
       : Math.round((completedToday / dueTodayCount) * 100);
   const weekDays = getLastSevenDays(activeToday);
-  function toggleHabit(id: string, day = activeToday) {
+  async function toggleHabit(id: string, day = activeToday) {
     if (!day) return;
 
-    setHabits((current) =>
-      current.map((habit) => {
-        if (habit.id !== id) return habit;
+    const habit = habits.find((currentHabit) => currentHabit.id === id);
+    if (!habit || !userId) return;
 
-        const completed = habit.completedDates.includes(day);
+    try {
+      const updatedHabit = await toggleHabitCompletion(userId, habit, day);
 
-        return {
-          ...habit,
-          completedDates: completed
-            ? habit.completedDates.filter((date) => date !== day)
-            : [...habit.completedDates, day].sort(),
-        };
-      })
-    );
+      setHabits((current) =>
+        current.map((currentHabit) =>
+          currentHabit.id === id ? updatedHabit : currentHabit
+        )
+      );
+      setErrorMessage("");
+    } catch (error) {
+      console.error(error);
+      setErrorMessage("Could not update habit completion.");
+    }
   }
 
-  function deleteHabit(id: string) {
-    setHabits((current) => current.filter((habit) => habit.id !== id));
+  async function deleteHabit(id: string) {
+    if (!userId) return;
+
+    try {
+      await deleteHabitFromSupabase(userId, id);
+      setHabits((current) => current.filter((habit) => habit.id !== id));
+      setErrorMessage("");
+    } catch (error) {
+      console.error(error);
+      setErrorMessage("Could not delete habit.");
+    }
   }
 
   return (
@@ -332,8 +371,22 @@ export default function HomePage() {
               </p>
             </div>
 
+            {isLoading && (
+              <div className="rounded-[34px] border border-white/10 bg-white/[0.07] p-6 text-center shadow-[0_18px_50px_rgba(0,0,0,0.24)] backdrop-blur-2xl">
+                <p className="text-sm font-semibold text-[#8c9686]">
+                  Loading habits...
+                </p>
+              </div>
+            )}
+
+            {errorMessage && (
+              <div className="rounded-[26px] border border-[#ff6b6b]/20 bg-[#ff6b6b]/10 px-4 py-3 text-sm font-semibold text-[#ffb3b3]">
+                {errorMessage}
+              </div>
+            )}
+
             <AnimatePresence initial={false}>
-              {todoHabitsToday.map((habit, index) => (
+              {!isLoading && todoHabitsToday.map((habit, index) => (
                 <HabitCard
                   key={habit.id}
                   habit={habit}
@@ -344,7 +397,7 @@ export default function HomePage() {
                 />
               ))}
 
-              {habits.length > 0 && todoHabitsToday.length === 0 && (
+              {!isLoading && habits.length > 0 && todoHabitsToday.length === 0 && (
                 <motion.div
                   key="today-complete"
                   layout
@@ -370,7 +423,7 @@ export default function HomePage() {
                 </motion.div>
               )}
 
-              {habits.length === 0 && (
+              {!isLoading && habits.length === 0 && (
                 <motion.div
                   key="empty-habits"
                   layout
