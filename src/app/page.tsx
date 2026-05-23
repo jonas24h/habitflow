@@ -316,7 +316,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 18, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ type: "spring", stiffness: 180, damping: 24 }}
-            className="relative overflow-hidden rounded-[36px] border border-white/10 bg-white/[0.08] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.10)] backdrop-blur-2xl"
+            className="relative isolate overflow-hidden rounded-[36px] border border-white/10 bg-white/[0.08] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.10)] [clip-path:inset(0_round_36px)] backdrop-blur-2xl"
           >
             <div className="pointer-events-none absolute -right-16 -top-20 h-44 w-44 rounded-full bg-[#c6ff3d]/20 blur-3xl" />
             <div className="relative flex items-start justify-between gap-4">
