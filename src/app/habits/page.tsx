@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowLeft, LogOut } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 
+import { DeleteHabitSheet } from "@/components/habits/delete-habit-sheet";
 import { HabitForm } from "@/components/habits/habit-form";
 import { HabitManagementList } from "@/components/habits/habit-management-list";
 import { BottomNav } from "@/components/layout/bottom-nav";
@@ -31,6 +32,8 @@ export default function HabitsPage() {
   const [userId, setUserId] = useState("");
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [habitToDelete, setHabitToDelete] = useState<Habit | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
@@ -149,22 +152,23 @@ export default function HabitsPage() {
     }
   }
 
-  async function deleteHabit(id: string) {
-    if (!userId) return;
+  async function deleteHabit() {
+    if (!userId || !habitToDelete) return;
 
     try {
-      await deleteHabitFromSupabase(userId, id);
-      setHabits((current) => current.filter((habit) => habit.id !== id));
+      setIsDeleting(true);
+      await deleteHabitFromSupabase(userId, habitToDelete.id);
+      setHabits((current) =>
+        current.filter((habit) => habit.id !== habitToDelete.id)
+      );
+      setHabitToDelete(null);
       setErrorMessage("");
     } catch (error) {
       console.error(error);
       setErrorMessage("Could not delete habit.");
+    } finally {
+      setIsDeleting(false);
     }
-  }
-
-  async function signOut() {
-    await supabase.auth.signOut();
-    router.replace("/auth");
   }
 
   const visibleHabits = isLoading ? [] : habits;
@@ -198,16 +202,6 @@ export default function HabitsPage() {
                 {visibleHabits.length}
               </div>
             </div>
-            <motion.button
-              type="button"
-              onClick={signOut}
-              whileTap={{ scale: 0.94 }}
-              transition={{ duration: 0.12, ease: QUICK_EASE }}
-              className="mt-4 inline-flex h-10 touch-manipulation items-center gap-2 rounded-[18px] border border-white/10 bg-white/[0.07] px-3 text-[13px] font-bold text-[#8c9686] transition-colors duration-150 transform-gpu"
-            >
-              <LogOut size={15} />
-              Logout
-            </motion.button>
           </header>
 
           <motion.section
@@ -248,13 +242,21 @@ export default function HabitsPage() {
                 habits={visibleHabits}
                 today={today}
                 onUpdate={updateHabit}
-                onDelete={deleteHabit}
+                onDelete={setHabitToDelete}
               />
             )}
           </section>
 
           <BottomNav />
         </section>
+        <DeleteHabitSheet
+          habit={habitToDelete}
+          isDeleting={isDeleting}
+          onOpenChange={(open) => {
+            if (!open && !isDeleting) setHabitToDelete(null);
+          }}
+          onConfirm={deleteHabit}
+        />
       </div>
     </main>
   );

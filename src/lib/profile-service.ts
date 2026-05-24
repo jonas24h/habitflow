@@ -47,3 +47,18 @@ export async function createProfile(userId: string, username: string) {
 
   return toProfile(data);
 }
+
+export async function updateProfile(userId: string, username: string) {
+  const { data, error } = await supabase
+    .from("profiles")
+    .update({ username })
+    .eq("id", userId)
+    .select("id,username")
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return toProfile(data);
+}

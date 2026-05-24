@@ -15,6 +15,7 @@ import {
   Trophy,
 } from "lucide-react";
 
+import { DeleteHabitSheet } from "@/components/habits/delete-habit-sheet";
 import { HabitForm } from "@/components/habits/habit-form";
 import { ScheduleSummary, getScheduleSummary } from "@/components/habits/schedule-summary";
 import { BottomNav } from "@/components/layout/bottom-nav";
@@ -182,6 +183,8 @@ export default function HabitDetailPage() {
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [isDeleteSheetOpen, setIsDeleteSheetOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [selectedMonth, setSelectedMonth] = useState(() =>
     getMonthStart(new Date())
@@ -318,11 +321,14 @@ export default function HabitDetailPage() {
     if (!userId || !habit) return;
 
     try {
+      setIsDeleting(true);
       await deleteHabitFromSupabase(userId, habit.id);
       router.replace("/habits");
     } catch (error) {
       console.error(error);
       setErrorMessage("Could not delete habit.");
+    } finally {
+      setIsDeleting(false);
     }
   }
 
@@ -534,7 +540,7 @@ export default function HabitDetailPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={deleteHabit}
+                      onClick={() => setIsDeleteSheetOpen(true)}
                       className="flex h-14 items-center justify-center gap-2 rounded-[23px] border border-[#ff6b6b]/20 bg-[#ff6b6b]/10 text-[15px] font-black text-[#ffb3b3] transition active:scale-95"
                     >
                       <Trash2 size={18} />
@@ -548,6 +554,14 @@ export default function HabitDetailPage() {
 
           <BottomNav />
         </section>
+        <DeleteHabitSheet
+          habit={isDeleteSheetOpen && habit ? habit : null}
+          isDeleting={isDeleting}
+          onOpenChange={(open) => {
+            if (!open && !isDeleting) setIsDeleteSheetOpen(false);
+          }}
+          onConfirm={deleteHabit}
+        />
       </div>
     </main>
   );

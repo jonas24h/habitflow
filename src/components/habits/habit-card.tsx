@@ -11,7 +11,7 @@ type HabitCardProps = {
   index: number;
   today: string;
   onToggle: (id: string) => void;
-  onDelete: (id: string) => void;
+  onDelete: (habit: Habit) => void;
 };
 
 const BURST_PARTICLES = [
@@ -188,7 +188,7 @@ export function HabitCard({
 
         <button
           type="button"
-          onClick={() => onDelete(habit.id)}
+          onClick={() => onDelete(habit)}
           className="flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-full text-[#667061] transition-transform duration-150 hover:bg-white/10 hover:text-[#ff6b6b] active:scale-90"
           aria-label="Delete habit"
         >

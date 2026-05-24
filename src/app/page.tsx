@@ -1,5 +1,6 @@
 "use client";
 
+import { DeleteHabitSheet } from "@/components/habits/delete-habit-sheet";
 import { HabitCard } from "@/components/habits/habit-card";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { ProfileOnboarding } from "@/components/onboarding/profile-onboarding";
@@ -118,6 +119,8 @@ export default function HomePage() {
   const [username, setUsername] = useState("");
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [habitToDelete, setHabitToDelete] = useState<Habit | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
@@ -266,16 +269,22 @@ export default function HomePage() {
     }
   }
 
-  async function deleteHabit(id: string) {
-    if (!userId) return;
+  async function deleteHabit() {
+    if (!userId || !habitToDelete) return;
 
     try {
-      await deleteHabitFromSupabase(userId, id);
-      setHabits((current) => current.filter((habit) => habit.id !== id));
+      setIsDeleting(true);
+      await deleteHabitFromSupabase(userId, habitToDelete.id);
+      setHabits((current) =>
+        current.filter((habit) => habit.id !== habitToDelete.id)
+      );
+      setHabitToDelete(null);
       setErrorMessage("");
     } catch (error) {
       console.error(error);
       setErrorMessage("Could not delete habit.");
+    } finally {
+      setIsDeleting(false);
     }
   }
 
@@ -423,7 +432,7 @@ export default function HomePage() {
                     index={index}
                     today={activeToday}
                     onToggle={toggleHabit}
-                    onDelete={deleteHabit}
+                    onDelete={setHabitToDelete}
                   />
                 ))}
 
@@ -501,7 +510,7 @@ export default function HomePage() {
                           index={index}
                           today={activeToday}
                           onToggle={toggleHabit}
-                          onDelete={deleteHabit}
+                          onDelete={setHabitToDelete}
                         />
                       ))}
                     </AnimatePresence>
@@ -513,6 +522,14 @@ export default function HomePage() {
 
           <BottomNav />
         </section>
+        <DeleteHabitSheet
+          habit={habitToDelete}
+          isDeleting={isDeleting}
+          onOpenChange={(open) => {
+            if (!open && !isDeleting) setHabitToDelete(null);
+          }}
+          onConfirm={deleteHabit}
+        />
       </div>
     </main>
   );

@@ -24,7 +24,7 @@ export function HabitManagementList({
     id: string,
     values: { name: string; schedule: HabitSchedule }
   ) => void;
-  onDelete: (id: string) => void;
+  onDelete: (habit: Habit) => void;
 }) {
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -104,7 +104,7 @@ export function HabitManagementList({
 
                 <motion.button
                   type="button"
-                  onClick={() => onDelete(habit.id)}
+                  onClick={() => onDelete(habit)}
                   whileTap={{ scale: 0.9 }}
                   transition={{ duration: 0.12, ease: QUICK_EASE }}
                   className="flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-full bg-white/[0.08] text-[#667061] transition-colors duration-150 hover:bg-white/10 hover:text-[#ff6b6b] transform-gpu"
