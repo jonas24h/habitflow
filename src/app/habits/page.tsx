@@ -21,6 +21,9 @@ import { fetchProfile } from "@/lib/profile-service";
 import { supabase } from "@/lib/supabase";
 import type { Habit, HabitSchedule } from "@/types/habit";
 
+const MotionLink = motion.create(Link);
+const QUICK_EASE = [0.2, 0.8, 0.2, 1] as const;
+
 export default function HabitsPage() {
   const router = useRouter();
   const [habits, setHabits] = useState<Habit[]>([]);
@@ -177,36 +180,40 @@ export default function HabitsPage() {
           <header className="-mx-5 px-5 pb-5 pt-3">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <Link
+                <MotionLink
                   href="/"
-                  className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#8c9686] transition active:scale-[0.99]"
+                  className="inline-flex touch-manipulation items-center gap-1.5 text-[13px] font-semibold text-[#8c9686] transition-transform duration-150"
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ duration: 0.12, ease: QUICK_EASE }}
                 >
                   <ArrowLeft size={15} />
                   Today
-                </Link>
+                </MotionLink>
                 <h1 className="mt-3 text-[40px] font-black leading-none tracking-[-0.05em]">
                   Habits
                 </h1>
               </div>
 
-              <div className="flex h-[52px] min-w-[52px] items-center justify-center rounded-[22px] border border-white/10 bg-white/[0.08] px-3 text-[13px] font-black text-[#d8ff69] shadow-[0_10px_30px_rgba(190,255,79,0.12)] backdrop-blur-xl">
+              <div className="flex h-[52px] min-w-[52px] items-center justify-center rounded-[22px] border border-white/10 bg-white/[0.08] px-3 text-[13px] font-black text-[#d8ff69] shadow-[0_8px_20px_rgba(190,255,79,0.10)] backdrop-blur-md">
                 {visibleHabits.length}
               </div>
             </div>
-            <button
+            <motion.button
               type="button"
               onClick={signOut}
-              className="mt-4 inline-flex h-10 items-center gap-2 rounded-[18px] border border-white/10 bg-white/[0.07] px-3 text-[13px] font-bold text-[#8c9686] transition active:scale-95"
+              whileTap={{ scale: 0.94 }}
+              transition={{ duration: 0.12, ease: QUICK_EASE }}
+              className="mt-4 inline-flex h-10 touch-manipulation items-center gap-2 rounded-[18px] border border-white/10 bg-white/[0.07] px-3 text-[13px] font-bold text-[#8c9686] transition-colors duration-150 transform-gpu"
             >
               <LogOut size={15} />
               Logout
-            </button>
+            </motion.button>
           </header>
 
           <motion.section
             initial={{ opacity: 1, y: 0 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.2, ease: QUICK_EASE }}
             className="w-full shrink-0"
           >
             <HabitForm submitLabel="Create habit" onSubmit={addHabit} />
@@ -223,7 +230,7 @@ export default function HabitsPage() {
             </div>
 
             {isLoading && (
-              <div className="rounded-[34px] border border-white/10 bg-white/[0.07] p-6 text-center shadow-[0_18px_50px_rgba(0,0,0,0.24)] backdrop-blur-2xl">
+              <div className="rounded-[34px] border border-white/10 bg-white/[0.07] p-6 text-center shadow-[0_12px_34px_rgba(0,0,0,0.22)] backdrop-blur-md">
                 <p className="text-sm font-semibold text-[#8c9686]">
                   Loading habits...
                 </p>

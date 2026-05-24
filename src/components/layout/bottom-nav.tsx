@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BarChart3, Home, Plus } from "lucide-react";
+import { motion } from "framer-motion";
 
 const TABS = [
   {
@@ -22,29 +23,33 @@ const TABS = [
   },
 ];
 
+const MotionLink = motion.create(Link);
+
 export function BottomNav() {
   const pathname = usePathname();
 
   return (
     <nav className="fixed bottom-0 left-1/2 z-30 w-full max-w-[430px] -translate-x-1/2 px-5 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
-      <div className="grid grid-cols-3 rounded-[30px] border border-white/10 bg-[#11170f]/88 p-2 shadow-[0_18px_50px_rgba(0,0,0,0.45)] backdrop-blur-2xl">
+      <div className="grid grid-cols-3 rounded-[30px] border border-white/10 bg-[#11170f]/92 p-2 shadow-[0_12px_34px_rgba(0,0,0,0.38)] backdrop-blur-md transform-gpu">
         {TABS.map((tab) => {
           const Icon = tab.icon;
           const active = pathname === tab.href;
           const className = active
-            ? "flex h-12 items-center justify-center gap-2 rounded-[22px] bg-[#c6ff3d] text-sm font-black text-[#081006] shadow-[0_10px_28px_rgba(198,255,61,0.24)]"
-            : "flex h-12 items-center justify-center gap-2 rounded-[22px] text-sm font-bold text-[#788274] transition active:scale-95";
+            ? "flex h-12 touch-manipulation items-center justify-center gap-2 rounded-[22px] bg-[#c6ff3d] text-sm font-black text-[#081006] shadow-[0_8px_18px_rgba(198,255,61,0.20)] transform-gpu"
+            : "flex h-12 touch-manipulation items-center justify-center gap-2 rounded-[22px] text-sm font-bold text-[#788274] transition-colors duration-150 transform-gpu";
 
           return (
-            <Link
+            <MotionLink
               key={tab.href}
               href={tab.href}
               className={className}
               aria-current={active ? "page" : undefined}
+              whileTap={{ scale: 0.93 }}
+              transition={{ duration: 0.12, ease: [0.2, 0.8, 0.2, 1] }}
             >
               <Icon size={18} />
               {tab.label}
-            </Link>
+            </MotionLink>
           );
         })}
       </div>

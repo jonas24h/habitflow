@@ -126,6 +126,7 @@
     overflow-x: hidden;
     overscroll-behavior: none;
     touch-action: manipulation;
+    -webkit-overflow-scrolling: touch;
   }
   body {
     @apply bg-background text-foreground;
@@ -133,6 +134,7 @@
     padding: env(safe-area-inset-top) env(safe-area-inset-right)
       env(safe-area-inset-bottom) env(safe-area-inset-left);
     -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
   }
   html {
     @apply font-sans;

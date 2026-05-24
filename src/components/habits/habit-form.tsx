@@ -16,6 +16,7 @@ const WEEKDAYS = [
   { label: "S", value: 6 },
   { label: "S", value: 0 },
 ];
+const QUICK_EASE = [0.2, 0.8, 0.2, 1] as const;
 
 function scheduleDefaults(schedule?: HabitSchedule) {
   return {
@@ -123,13 +124,15 @@ export function HabitForm({
           className="h-[54px] min-w-0 flex-1 rounded-[23px] border border-white/10 bg-black/25 px-4 text-[15px] font-semibold text-white outline-none placeholder:text-[#667061] focus:border-[#c6ff3d]/35 focus:bg-black/35"
         />
 
-        <button
+        <motion.button
           type="submit"
+          whileTap={{ scale: 0.9 }}
+          transition={{ duration: 0.12, ease: QUICK_EASE }}
           className="flex h-[54px] w-[54px] shrink-0 items-center justify-center rounded-[23px] bg-[#c6ff3d] text-[#081006] shadow-[0_14px_34px_rgba(198,255,61,0.30)] active:scale-95"
           aria-label={submitLabel ?? "Save habit"}
         >
           {habit ? <Check size={21} /> : <Plus size={21} />}
-        </button>
+        </motion.button>
       </div>
 
       <div className="mt-3 grid grid-cols-3 gap-2 rounded-[24px] bg-black/25 p-1 ring-1 ring-white/10">
@@ -138,12 +141,14 @@ export function HabitForm({
           { label: "Weekly", value: "weekly_count" },
           { label: "Days", value: "specific_days" },
         ].map((option) => (
-          <button
+          <motion.button
             key={option.value}
             type="button"
             onClick={() =>
               setScheduleType(option.value as HabitSchedule["type"])
             }
+            whileTap={{ scale: 0.96 }}
+            transition={{ duration: 0.12, ease: QUICK_EASE }}
             className={`h-10 rounded-[20px] text-[13px] font-bold transition ${
               scheduleType === option.value
                 ? "bg-[#c6ff3d] text-[#081006] shadow-[0_8px_22px_rgba(198,255,61,0.24)]"
@@ -151,7 +156,7 @@ export function HabitForm({
             }`}
           >
             {option.label}
-          </button>
+          </motion.button>
         ))}
       </div>
 
@@ -162,7 +167,7 @@ export function HabitForm({
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.18 }}
+            transition={{ duration: 0.16, ease: QUICK_EASE }}
             className="mt-3 flex items-center justify-between rounded-[24px] bg-black/25 px-4 py-3 ring-1 ring-white/10"
           >
             <span className="text-[13px] font-semibold text-[#8c9686]">
@@ -171,10 +176,12 @@ export function HabitForm({
 
             <div className="flex items-center gap-2">
               {[1, 2, 3, 4, 5, 6, 7].map((target) => (
-                <button
+                <motion.button
                   key={target}
                   type="button"
                   onClick={() => setWeeklyTarget(target)}
+                  whileTap={{ scale: 0.9 }}
+                  transition={{ duration: 0.12, ease: QUICK_EASE }}
                   className={`flex h-7 w-7 items-center justify-center rounded-full text-[12px] font-bold transition ${
                     weeklyTarget === target
                       ? "bg-[#c6ff3d] text-[#081006]"
@@ -182,7 +189,7 @@ export function HabitForm({
                   }`}
                 >
                   {target}
-                </button>
+                </motion.button>
               ))}
             </div>
           </motion.div>
@@ -194,17 +201,19 @@ export function HabitForm({
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.18 }}
+            transition={{ duration: 0.16, ease: QUICK_EASE }}
             className="mt-3 grid grid-cols-7 gap-1.5 rounded-[24px] bg-black/25 p-2 ring-1 ring-white/10"
           >
             {WEEKDAYS.map((weekday) => {
               const selected = selectedWeekdays.includes(weekday.value);
 
               return (
-                <button
+                <motion.button
                   key={weekday.value}
                   type="button"
                   onClick={() => toggleSelectedWeekday(weekday.value)}
+                  whileTap={{ scale: 0.92 }}
+                  transition={{ duration: 0.12, ease: QUICK_EASE }}
                   className={`flex h-9 items-center justify-center rounded-[16px] text-[13px] font-bold transition ${
                     selected
                       ? "bg-[#c6ff3d] text-[#081006]"
@@ -212,7 +221,7 @@ export function HabitForm({
                   }`}
                 >
                   {weekday.label}
-                </button>
+                </motion.button>
               );
             })}
           </motion.div>
@@ -220,13 +229,15 @@ export function HabitForm({
       </AnimatePresence>
 
       {onCancel && (
-        <button
+        <motion.button
           type="button"
           onClick={onCancel}
+          whileTap={{ scale: 0.98 }}
+          transition={{ duration: 0.12, ease: QUICK_EASE }}
           className="mt-3 h-10 w-full rounded-[18px] text-sm font-bold text-[#8c9686] active:scale-[0.99]"
         >
           Cancel
-        </button>
+        </motion.button>
       )}
     </form>
   );

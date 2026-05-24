@@ -28,13 +28,14 @@ import {
   Plus,
   Trophy,
 } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
 
 const DATE_FORMATTER = new Intl.DateTimeFormat("en", {
   weekday: "long",
   month: "long",
   day: "numeric",
 });
+const MotionLink = motion.create(Link);
 
 function getGreeting(date = new Date()) {
   const hour = date.getHours();
@@ -305,19 +306,21 @@ export default function HomePage() {
                 <motion.div
                   initial={{ opacity: 0, scale: 0.88 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.35, ease: "easeOut" }}
-                  className="flex h-[52px] min-w-[52px] items-center justify-center rounded-[22px] border border-white/10 bg-white/[0.08] px-3 text-[13px] font-bold text-[#d8ff69] shadow-[0_10px_30px_rgba(190,255,79,0.12)] backdrop-blur-xl"
+                  transition={{ duration: 0.18, ease: [0.2, 0.8, 0.2, 1] }}
+                  className="flex h-[52px] min-w-[52px] items-center justify-center rounded-[22px] border border-white/10 bg-white/[0.08] px-3 text-[13px] font-bold text-[#d8ff69] shadow-[0_8px_20px_rgba(190,255,79,0.10)] backdrop-blur-md transform-gpu"
                 >
                   {progressPercent}%
                 </motion.div>
 
-                <Link
+                <MotionLink
                   href="/habits"
-                  className="pointer-events-auto flex h-[52px] w-[52px] shrink-0 touch-manipulation items-center justify-center rounded-[22px] bg-[#c6ff3d] text-[#081006] shadow-[0_14px_34px_rgba(198,255,61,0.30)] transition active:scale-95"
+                  className="pointer-events-auto flex h-[52px] w-[52px] shrink-0 touch-manipulation items-center justify-center rounded-[22px] bg-[#c6ff3d] text-[#081006] shadow-[0_10px_24px_rgba(198,255,61,0.24)] transform-gpu"
                   aria-label="Manage habits"
+                  whileTap={{ scale: 0.9 }}
+                  transition={{ duration: 0.12, ease: [0.2, 0.8, 0.2, 1] }}
                 >
                   <Plus size={21} />
-                </Link>
+                </MotionLink>
               </div>
             </div>
           </header>
@@ -325,10 +328,10 @@ export default function HomePage() {
           <motion.section
             initial={{ opacity: 0, y: 18, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ type: "spring", stiffness: 180, damping: 24 }}
-            className="relative isolate overflow-hidden rounded-[36px] border border-white/10 bg-white/[0.08] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.10)] [clip-path:inset(0_round_36px)] backdrop-blur-2xl"
+            transition={{ duration: 0.22, ease: [0.2, 0.8, 0.2, 1] }}
+            className="relative isolate overflow-hidden rounded-[36px] border border-white/10 bg-white/[0.08] p-5 shadow-[0_16px_42px_rgba(0,0,0,0.30),inset_0_1px_0_rgba(255,255,255,0.10)] [clip-path:inset(0_round_36px)] backdrop-blur-md transform-gpu"
           >
-            <div className="pointer-events-none absolute -right-16 -top-20 h-44 w-44 rounded-full bg-[#c6ff3d]/20 blur-3xl" />
+            <div className="pointer-events-none absolute -right-12 -top-16 h-32 w-32 rounded-full bg-[#c6ff3d]/14 blur-2xl" />
             <div className="relative flex items-start justify-between gap-4">
               <div>
                 <p className="text-[13px] font-semibold text-[#9fa895]">
@@ -350,8 +353,8 @@ export default function HomePage() {
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${progressPercent}%` }}
-                transition={{ type: "spring", stiffness: 120, damping: 22 }}
-                className="h-full rounded-full bg-[#c6ff3d] shadow-[0_0_20px_rgba(198,255,61,0.45)]"
+                transition={{ duration: 0.22, ease: [0.2, 0.8, 0.2, 1] }}
+                className="h-full rounded-full bg-[#c6ff3d] shadow-[0_0_12px_rgba(198,255,61,0.34)] transform-gpu"
               />
             </div>
           </motion.section>
@@ -366,11 +369,11 @@ export default function HomePage() {
                   initial={{ opacity: 0, y: 14, scale: 0.98 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={{
-                    delay: index * 0.04,
-                    duration: 0.32,
-                    ease: [0.22, 1, 0.36, 1],
+                    delay: index * 0.02,
+                    duration: 0.2,
+                    ease: [0.2, 0.8, 0.2, 1],
                   }}
-                  className="rounded-[30px] border border-white/10 bg-white/[0.08] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.24),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-2xl"
+                  className="rounded-[30px] border border-white/10 bg-white/[0.08] p-4 shadow-[0_12px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md transform-gpu"
                 >
                   <div className="flex h-11 w-11 items-center justify-center rounded-[18px] bg-[#c6ff3d]/15 text-[#d8ff69] ring-1 ring-[#c6ff3d]/20">
                     <Icon size={20} />
@@ -411,99 +414,101 @@ export default function HomePage() {
               </div>
             )}
 
-            <AnimatePresence initial={false}>
-              {!isLoading && todoHabitsToday.map((habit, index) => (
-                <HabitCard
-                  key={habit.id}
-                  habit={habit}
-                  index={index}
-                  today={activeToday}
-                  onToggle={toggleHabit}
-                  onDelete={deleteHabit}
-                />
-              ))}
+            <LayoutGroup>
+              <AnimatePresence initial={false}>
+                {!isLoading && todoHabitsToday.map((habit, index) => (
+                  <HabitCard
+                    key={habit.id}
+                    habit={habit}
+                    index={index}
+                    today={activeToday}
+                    onToggle={toggleHabit}
+                    onDelete={deleteHabit}
+                  />
+                ))}
 
-              {!isLoading && habits.length > 0 && todoHabitsToday.length === 0 && (
-                <motion.div
-                  key="today-complete"
-                  layout
-                  initial={{ opacity: 0, y: 10, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -6, scale: 0.98 }}
-                  transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-                  className="rounded-[34px] border border-white/10 bg-white/[0.07] p-6 text-center shadow-[0_18px_50px_rgba(0,0,0,0.24)] backdrop-blur-2xl"
-                >
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-[20px] bg-[#c6ff3d] text-[#081006] shadow-[0_12px_28px_rgba(198,255,61,0.28)]">
-                    <CheckCircle2 size={22} />
-                  </div>
-                  <p className="mt-4 text-lg font-bold tracking-[-0.02em] text-white">
-                    {dueTodayCount === 0
-                      ? "Nothing is due today"
-                      : "You are done for today"}
-                  </p>
-                  <p className="mt-2 text-sm font-medium text-[#8c9686]">
-                    {dueTodayCount === 0
-                      ? "Scheduled habits will appear when they are due."
-                      : "All due habits are checked off."}
-                  </p>
-                </motion.div>
-              )}
-
-              {!isLoading && habits.length === 0 && (
-                <motion.div
-                  key="empty-habits"
-                  layout
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-                  className="rounded-[34px] border border-dashed border-white/15 bg-white/[0.06] p-8 text-center shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur-2xl"
-                >
-                  <p className="text-lg font-bold tracking-[-0.02em] text-white">
-                    No habits yet
-                  </p>
-                  <p className="mt-2 text-sm font-medium text-[#8c9686]">
-                    Add your first habit and start building momentum today.
-                  </p>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <AnimatePresence>
-              {completedHabits.length > 0 && (
-                <motion.div
-                  key="done-section"
-                  layout
-                  initial={{ opacity: 0, y: 14 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                  className="mt-3 flex flex-col gap-3.5"
-                >
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-[24px] font-black tracking-[-0.035em] text-white">
-                      Done today
-                    </h2>
-                    <p className="text-sm font-semibold text-[#8c9686]">
-                      {completedHabits.length} complete
+                {!isLoading && habits.length > 0 && todoHabitsToday.length === 0 && (
+                  <motion.div
+                    key="today-complete"
+                    layout
+                    initial={{ opacity: 0, y: 8, scale: 0.985 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -4, scale: 0.985 }}
+                    transition={{ duration: 0.2, ease: [0.2, 0.8, 0.2, 1] }}
+                    className="rounded-[34px] border border-white/10 bg-white/[0.07] p-6 text-center shadow-[0_12px_34px_rgba(0,0,0,0.22)] backdrop-blur-md transform-gpu"
+                  >
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-[20px] bg-[#c6ff3d] text-[#081006] shadow-[0_10px_22px_rgba(198,255,61,0.22)]">
+                      <CheckCircle2 size={22} />
+                    </div>
+                    <p className="mt-4 text-lg font-bold tracking-[-0.02em] text-white">
+                      {dueTodayCount === 0
+                        ? "Nothing is due today"
+                        : "You are done for today"}
                     </p>
-                  </div>
+                    <p className="mt-2 text-sm font-medium text-[#8c9686]">
+                      {dueTodayCount === 0
+                        ? "Scheduled habits will appear when they are due."
+                        : "All due habits are checked off."}
+                    </p>
+                  </motion.div>
+                )}
 
-                  <AnimatePresence initial={false}>
-                    {completedHabits.map((habit, index) => (
-                      <HabitCard
-                        key={habit.id}
-                        habit={habit}
-                        index={index}
-                        today={activeToday}
-                        onToggle={toggleHabit}
-                        onDelete={deleteHabit}
-                      />
-                    ))}
-                  </AnimatePresence>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                {!isLoading && habits.length === 0 && (
+                  <motion.div
+                    key="empty-habits"
+                    layout
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.2, ease: [0.2, 0.8, 0.2, 1] }}
+                    className="rounded-[34px] border border-dashed border-white/15 bg-white/[0.06] p-8 text-center shadow-[0_12px_30px_rgba(0,0,0,0.20)] backdrop-blur-md transform-gpu"
+                  >
+                    <p className="text-lg font-bold tracking-[-0.02em] text-white">
+                      No habits yet
+                    </p>
+                    <p className="mt-2 text-sm font-medium text-[#8c9686]">
+                      Add your first habit and start building momentum today.
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <AnimatePresence>
+                {completedHabits.length > 0 && (
+                  <motion.div
+                    key="done-section"
+                    layout
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.2, ease: [0.2, 0.8, 0.2, 1] }}
+                    className="mt-3 flex flex-col gap-3.5 transform-gpu"
+                  >
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-[24px] font-black tracking-[-0.035em] text-white">
+                        Done today
+                      </h2>
+                      <p className="text-sm font-semibold text-[#8c9686]">
+                        {completedHabits.length} complete
+                      </p>
+                    </div>
+
+                    <AnimatePresence initial={false}>
+                      {completedHabits.map((habit, index) => (
+                        <HabitCard
+                          key={habit.id}
+                          habit={habit}
+                          index={index}
+                          today={activeToday}
+                          onToggle={toggleHabit}
+                          onDelete={deleteHabit}
+                        />
+                      ))}
+                    </AnimatePresence>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </LayoutGroup>
           </section>
 
           <BottomNav />

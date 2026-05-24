@@ -25,6 +25,13 @@ const BURST_PARTICLES = [
   { x: -18, y: -30, size: 3, delay: 0.105 },
 ];
 
+const QUICK_EASE = [0.2, 0.8, 0.2, 1] as const;
+const CARD_TRANSITION = {
+  layout: { duration: 0.22, ease: QUICK_EASE },
+  duration: 0.18,
+  ease: QUICK_EASE,
+};
+
 export function HabitCard({
   habit,
   index,
@@ -59,27 +66,27 @@ export function HabitCard({
   return (
     <motion.article
       layout
-      initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 14, scale: 0.98 }}
+      layoutId={`habit-card-${habit.id}`}
+      initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 8, scale: 0.985 }}
       animate={{
         opacity: completed ? 0.74 : 1,
-        y: completed && !shouldReduceMotion ? 4 : 0,
+        y: completed && !shouldReduceMotion ? 2 : 0,
         scale: 1,
       }}
       exit={{
         opacity: 0,
-        y: shouldReduceMotion ? 0 : -10,
-        scale: 0.98,
+        y: shouldReduceMotion ? 0 : -6,
+        scale: 0.985,
       }}
       transition={{
-        delay: shouldReduceMotion ? 0 : index * 0.035,
-        layout: { duration: 0.34, ease: [0.22, 1, 0.36, 1] },
-        duration: 0.3,
-        ease: [0.22, 1, 0.36, 1],
+        ...CARD_TRANSITION,
+        delay: shouldReduceMotion ? 0 : Math.min(index * 0.018, 0.07),
       }}
+      style={{ willChange: "transform, opacity" }}
       className={`rounded-[32px] border p-4 shadow-[0_18px_50px_rgba(0,0,0,0.26)] backdrop-blur-2xl transition ${
         completed
-          ? "border-[#c6ff3d]/35 bg-[#c6ff3d]/10 shadow-[0_18px_50px_rgba(198,255,61,0.10)]"
-          : "border-white/10 bg-white/[0.07]"
+          ? "border-[#c6ff3d]/32 bg-[#c6ff3d]/10 shadow-[0_12px_34px_rgba(198,255,61,0.10)]"
+          : "border-white/10 bg-white/[0.07] shadow-[0_12px_34px_rgba(0,0,0,0.22)]"
       }`}
     >
       <div className="flex items-center gap-3.5">
@@ -111,11 +118,11 @@ export function HabitCard({
                     }}
                     exit={{ opacity: 0 }}
                     transition={{
-                      duration: 0.46,
+                      duration: 0.34,
                       delay: particle.delay,
-                      ease: [0.22, 1, 0.36, 1],
+                      ease: QUICK_EASE,
                     }}
-                    className="absolute rounded-full bg-[#c6ff3d] shadow-[0_0_12px_rgba(198,255,61,0.50)]"
+                    className="absolute rounded-full bg-[#c6ff3d] shadow-[0_0_8px_rgba(198,255,61,0.38)] transform-gpu"
                     style={{
                       height: particle.size,
                       width: particle.size,
@@ -129,17 +136,17 @@ export function HabitCard({
           <motion.button
             type="button"
             onClick={toggleHabit}
-            whileTap={{ scale: 0.92 }}
+            whileTap={{ scale: 0.9 }}
             animate={{
               backgroundColor: completed ? "#c6ff3d" : "rgba(255,255,255,0.08)",
               boxShadow: completed
-                ? "0 14px 32px rgba(198, 255, 61, 0.32)"
+                ? "0 10px 22px rgba(198, 255, 61, 0.24)"
                 : "inset 0 1px 0 rgba(255,255,255,0.08)",
               color: completed ? "#081006" : "#8c9686",
-              scale: completed ? 1.03 : 1,
+              scale: completed && !shouldReduceMotion ? [1, 1.08, 1.02] : 1,
             }}
-            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-            className="flex h-[62px] w-[62px] shrink-0 items-center justify-center rounded-[25px] border border-white/10"
+            transition={{ duration: 0.18, ease: QUICK_EASE }}
+            className="flex h-[62px] w-[62px] shrink-0 touch-manipulation items-center justify-center rounded-[25px] border border-white/10 transform-gpu will-change-transform"
             aria-label={completed ? "Mark habit as incomplete" : "Complete habit"}
           >
             <motion.span
@@ -148,7 +155,7 @@ export function HabitCard({
                 scale: completed ? 1 : 0.92,
                 opacity: completed ? 1 : 0.62,
               }}
-              transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.16, ease: QUICK_EASE }}
             >
               <Check size={23} strokeWidth={2.7} />
             </motion.span>
@@ -157,7 +164,7 @@ export function HabitCard({
 
         <Link
           href={`/habits/${habit.id}`}
-          className="min-w-0 flex-1 text-left transition active:scale-[0.99]"
+          className="min-w-0 flex-1 touch-manipulation text-left transition-transform duration-150 active:scale-[0.99]"
         >
           <span
             className={`block truncate text-[18px] font-black tracking-[-0.025em] transition ${
@@ -182,7 +189,7 @@ export function HabitCard({
         <button
           type="button"
           onClick={() => onDelete(habit.id)}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#667061] transition hover:bg-white/10 hover:text-[#ff6b6b] active:scale-95"
+          className="flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-full text-[#667061] transition-transform duration-150 hover:bg-white/10 hover:text-[#ff6b6b] active:scale-90"
           aria-label="Delete habit"
         >
           <Trash2 size={18} />
