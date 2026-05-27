@@ -6,10 +6,14 @@ import { BottomNav } from "@/components/layout/bottom-nav";
 import { ProfileOnboarding } from "@/components/onboarding/profile-onboarding";
 import {
   dateKey,
-  fromDateKey,
   getDueHabitsForDate,
   isHabitDueOnDate,
 } from "@/lib/habits";
+import {
+  getBestStreak,
+  getCheckInDates,
+  getCurrentStreak,
+} from "@/lib/habit-analytics";
 import {
   deleteHabit as deleteHabitFromSupabase,
   fetchHabits,
@@ -69,44 +73,6 @@ function getHabitsForDateOverview(habits: Habit[], key: string) {
   });
 
   return Array.from(habitsById.values());
-}
-
-function getCheckInDates(habits: Habit[]) {
-  return habits.flatMap((habit) => habit.completedDates);
-}
-
-function getCurrentStreak(completedDateKeys: Set<string>, today: string) {
-  let streak = 0;
-  const date = fromDateKey(today);
-
-  while (completedDateKeys.has(dateKey(date))) {
-    streak += 1;
-    date.setDate(date.getDate() - 1);
-  }
-
-  return streak;
-}
-
-function getBestStreak(completedDateKeys: Set<string>) {
-  const sortedKeys = [...completedDateKeys].sort();
-  let best = 0;
-  let current = 0;
-  let previousDate: Date | null = null;
-
-  sortedKeys.forEach((key) => {
-    const currentDate = fromDateKey(key);
-    const isNextDay =
-      previousDate &&
-      Math.round(
-        (currentDate.getTime() - previousDate.getTime()) / 86_400_000
-      ) === 1;
-
-    current = isNextDay ? current + 1 : 1;
-    best = Math.max(best, current);
-    previousDate = currentDate;
-  });
-
-  return best;
 }
 
 export default function HomePage() {

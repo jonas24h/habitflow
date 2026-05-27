@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Home, Plus, UserRound } from "lucide-react";
+import { Home, Plus, UserRound } from "lucide-react";
 import { motion } from "framer-motion";
 
 const TABS = [
@@ -10,11 +10,6 @@ const TABS = [
     href: "/",
     label: "Today",
     icon: Home,
-  },
-  {
-    href: "/stats",
-    label: "Stats",
-    icon: BarChart3,
   },
   {
     href: "/habits",
@@ -35,7 +30,7 @@ export function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-1/2 z-30 w-full max-w-[430px] -translate-x-1/2 px-5 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
-      <div className="grid grid-cols-4 rounded-[30px] border border-white/10 bg-[#11170f]/92 p-2 shadow-[0_12px_34px_rgba(0,0,0,0.38)] backdrop-blur-md transform-gpu">
+      <div className="grid grid-cols-3 rounded-[30px] border border-white/10 bg-[#11170f]/92 p-2 shadow-[0_12px_34px_rgba(0,0,0,0.38)] backdrop-blur-md transform-gpu">
         {TABS.map((tab) => {
           const Icon = tab.icon;
           const active =
