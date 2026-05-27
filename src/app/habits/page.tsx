@@ -29,6 +29,11 @@ export default function HabitsPage() {
   const router = useRouter();
   const [habits, setHabits] = useState<Habit[]>([]);
   const [today, setToday] = useState("");
+  const [requestedEditId] = useState(() =>
+    typeof window === "undefined"
+      ? undefined
+      : new URLSearchParams(window.location.search).get("edit") ?? undefined
+  );
   const [userId, setUserId] = useState("");
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -241,6 +246,7 @@ export default function HabitsPage() {
               <HabitManagementList
                 habits={visibleHabits}
                 today={today}
+                initialEditingId={requestedEditId}
                 onUpdate={updateHabit}
                 onDelete={setHabitToDelete}
               />

@@ -398,6 +398,8 @@ export default function HomePage() {
                     index={index}
                     today={activeToday}
                     onToggle={toggleHabit}
+                    onAnalyze={(habit) => router.push(`/habits/${habit.id}`)}
+                    onEdit={(habit) => router.push(`/habits?edit=${habit.id}`)}
                     onDelete={setHabitToDelete}
                   />
                 ))}
@@ -476,6 +478,10 @@ export default function HomePage() {
                           index={index}
                           today={activeToday}
                           onToggle={toggleHabit}
+                          onAnalyze={(habit) => router.push(`/habits/${habit.id}`)}
+                          onEdit={(habit) =>
+                            router.push(`/habits?edit=${habit.id}`)
+                          }
                           onDelete={setHabitToDelete}
                         />
                       ))}

@@ -1,32 +1,38 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Trash2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
+import { HabitActionMenu } from "@/components/habits/habit-action-menu";
 import { HabitForm } from "@/components/habits/habit-form";
 import { ScheduleSummary } from "@/components/habits/schedule-summary";
 import type { Habit, HabitSchedule } from "@/types/habit";
 
 const QUICK_EASE = [0.2, 0.8, 0.2, 1] as const;
-const MotionLink = motion.create(Link);
 
 export function HabitManagementList({
   habits,
   today,
+  initialEditingId,
   onUpdate,
   onDelete,
 }: {
   habits: Habit[];
   today: string;
+  initialEditingId?: string;
   onUpdate: (
     id: string,
     values: { name: string; schedule: HabitSchedule }
   ) => void;
   onDelete: (habit: Habit) => void;
 }) {
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const router = useRouter();
+  const [editingId, setEditingId] = useState<string | null>(
+    initialEditingId && habits.some((habit) => habit.id === initialEditingId)
+      ? initialEditingId
+      : null
+  );
 
   if (habits.length === 0) {
     return (
@@ -76,12 +82,7 @@ export function HabitManagementList({
               />
             ) : (
               <div className="flex items-center gap-3.5">
-                <MotionLink
-                  href={`/habits/${habit.id}`}
-                  className="min-w-0 flex-1 touch-manipulation transition-transform duration-150"
-                  whileTap={{ scale: 0.99 }}
-                  transition={{ duration: 0.12, ease: QUICK_EASE }}
-                >
+                <div className="min-w-0 flex-1">
                   <h2 className="truncate text-[18px] font-black tracking-[-0.025em] text-white">
                     {habit.name}
                   </h2>
@@ -89,29 +90,14 @@ export function HabitManagementList({
                   <div className="mt-1.5">
                     <ScheduleSummary habit={habit} today={today} />
                   </div>
-                </MotionLink>
+                </div>
 
-                <motion.button
-                  type="button"
-                  onClick={() => setEditingId(habit.id)}
-                  whileTap={{ scale: 0.9 }}
-                  transition={{ duration: 0.12, ease: QUICK_EASE }}
-                  className="flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-full bg-white/[0.08] text-[#8c9686] transition-colors duration-150 hover:bg-white/10 hover:text-[#d8ff69] transform-gpu"
-                  aria-label={`Edit ${habit.name}`}
-                >
-                  <Pencil size={18} />
-                </motion.button>
-
-                <motion.button
-                  type="button"
-                  onClick={() => onDelete(habit)}
-                  whileTap={{ scale: 0.9 }}
-                  transition={{ duration: 0.12, ease: QUICK_EASE }}
-                  className="flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-full bg-white/[0.08] text-[#667061] transition-colors duration-150 hover:bg-white/10 hover:text-[#ff6b6b] transform-gpu"
-                  aria-label={`Delete ${habit.name}`}
-                >
-                  <Trash2 size={18} />
-                </motion.button>
+                <HabitActionMenu
+                  habitName={habit.name}
+                  onAnalyze={() => router.push(`/habits/${habit.id}`)}
+                  onEdit={() => setEditingId(habit.id)}
+                  onDelete={() => onDelete(habit)}
+                />
               </div>
             )}
           </motion.article>

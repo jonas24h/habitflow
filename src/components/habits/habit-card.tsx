@@ -1,8 +1,8 @@
-import { Check, Circle, Trash2 } from "lucide-react";
+import { Check, Circle } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { HabitActionMenu } from "@/components/habits/habit-action-menu";
 import { getHabitScheduleLabel } from "@/lib/habits";
 import { Habit } from "@/types/habit";
 
@@ -11,6 +11,8 @@ type HabitCardProps = {
   index: number;
   today: string;
   onToggle: (id: string) => void;
+  onAnalyze: (habit: Habit) => void;
+  onEdit: (habit: Habit) => void;
   onDelete: (habit: Habit) => void;
 };
 
@@ -37,6 +39,8 @@ export function HabitCard({
   index,
   today,
   onToggle,
+  onAnalyze,
+  onEdit,
   onDelete,
 }: HabitCardProps) {
   const completed = habit.completedDates.includes(today);
@@ -162,10 +166,7 @@ export function HabitCard({
           </motion.button>
         </div>
 
-        <Link
-          href={`/habits/${habit.id}`}
-          className="min-w-0 flex-1 touch-manipulation text-left transition-transform duration-150 active:scale-[0.99]"
-        >
+        <div className="min-w-0 flex-1 text-left">
           <span
             className={`block truncate text-[18px] font-black tracking-[-0.025em] transition ${
               completed ? "text-[#d8ff69]" : "text-white"
@@ -184,16 +185,14 @@ export function HabitCard({
               ? "Done today"
               : scheduleLabel}
           </span>
-        </Link>
+        </div>
 
-        <button
-          type="button"
-          onClick={() => onDelete(habit)}
-          className="flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-full text-[#667061] transition-transform duration-150 hover:bg-white/10 hover:text-[#ff6b6b] active:scale-90"
-          aria-label="Delete habit"
-        >
-          <Trash2 size={18} />
-        </button>
+        <HabitActionMenu
+          habitName={habit.name}
+          onAnalyze={() => onAnalyze(habit)}
+          onEdit={() => onEdit(habit)}
+          onDelete={() => onDelete(habit)}
+        />
       </div>
     </motion.article>
   );
