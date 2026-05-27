@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { BarChart3, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -8,6 +8,7 @@ const QUICK_EASE = [0.2, 0.8, 0.2, 1] as const;
 
 type HabitActionMenuProps = {
   habitName: string;
+  onOpenChange?: (open: boolean) => void;
   onAnalyze: () => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -36,12 +37,18 @@ const ACTIONS = [
 
 export function HabitActionMenu({
   habitName,
+  onOpenChange,
   onAnalyze,
   onEdit,
   onDelete,
 }: HabitActionMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const updateOpen = useCallback((open: boolean) => {
+    setIsOpen(open);
+    onOpenChange?.(open);
+  }, [onOpenChange]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -52,13 +59,13 @@ export function HabitActionMenu({
         event.target instanceof Node &&
         !menuRef.current.contains(event.target)
       ) {
-        setIsOpen(false);
+        updateOpen(false);
       }
     }
 
     function closeOnEscape(event: KeyboardEvent) {
       if (event.key === "Escape") {
-        setIsOpen(false);
+        updateOpen(false);
       }
     }
 
@@ -69,10 +76,10 @@ export function HabitActionMenu({
       document.removeEventListener("pointerdown", closeOnOutsideTap, true);
       document.removeEventListener("keydown", closeOnEscape);
     };
-  }, [isOpen]);
+  }, [isOpen, updateOpen]);
 
   function runAction(action: (typeof ACTIONS)[number]["action"]) {
-    setIsOpen(false);
+    updateOpen(false);
 
     if (action === "analyze") {
       onAnalyze();
@@ -91,7 +98,7 @@ export function HabitActionMenu({
     <div ref={menuRef} className="relative shrink-0">
       <motion.button
         type="button"
-        onClick={() => setIsOpen((open) => !open)}
+        onClick={() => updateOpen(!isOpen)}
         whileTap={{ scale: 0.9 }}
         transition={{ duration: 0.12, ease: QUICK_EASE }}
         className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-full bg-white/[0.08] text-[#8c9686] transition-colors duration-150 hover:bg-white/10 hover:text-[#d8ff69] transform-gpu"
@@ -108,7 +115,7 @@ export function HabitActionMenu({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.96 }}
             transition={{ duration: 0.12, ease: QUICK_EASE }}
-            className="absolute right-0 top-[calc(100%+0.5rem)] z-40 w-40 overflow-hidden rounded-[22px] border border-white/10 bg-[#10160f]/98 p-1.5 shadow-[0_18px_44px_rgba(0,0,0,0.42)] backdrop-blur-xl"
+            className="absolute right-0 top-[calc(100%+0.5rem)] z-[80] w-40 overflow-hidden rounded-[22px] border border-white/10 bg-[#10160f]/98 p-1.5 shadow-[0_18px_44px_rgba(0,0,0,0.42)] backdrop-blur-xl"
           >
             {ACTIONS.map((item) => {
               const Icon = item.icon;

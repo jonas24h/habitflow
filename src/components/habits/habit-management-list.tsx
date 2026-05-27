@@ -33,6 +33,7 @@ export function HabitManagementList({
       ? initialEditingId
       : null
   );
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   if (habits.length === 0) {
     return (
@@ -63,11 +64,14 @@ export function HabitManagementList({
               duration: 0.18,
               ease: QUICK_EASE,
             }}
-            style={{ willChange: "transform, opacity" }}
+            style={{
+              willChange: "transform, opacity",
+              zIndex: openMenuId === habit.id ? 70 : "auto",
+            }}
             className={
               editingId === habit.id
                 ? ""
-                : "rounded-[32px] border border-white/10 bg-white/[0.07] p-4 shadow-[0_12px_34px_rgba(0,0,0,0.22)] backdrop-blur-md transform-gpu"
+                : "relative overflow-visible rounded-[32px] border border-white/10 bg-white/[0.07] p-4 shadow-[0_12px_34px_rgba(0,0,0,0.22)] backdrop-blur-md transform-gpu"
             }
           >
             {editingId === habit.id ? (
@@ -94,6 +98,9 @@ export function HabitManagementList({
 
                 <HabitActionMenu
                   habitName={habit.name}
+                  onOpenChange={(open) =>
+                    setOpenMenuId(open ? habit.id : null)
+                  }
                   onAnalyze={() => router.push(`/habits/${habit.id}`)}
                   onEdit={() => setEditingId(habit.id)}
                   onDelete={() => onDelete(habit)}

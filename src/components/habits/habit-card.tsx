@@ -47,6 +47,7 @@ export function HabitCard({
   const scheduleLabel = getHabitScheduleLabel(habit, today);
   const shouldReduceMotion = useReducedMotion();
   const [showBurst, setShowBurst] = useState(false);
+  const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!showBurst) return;
@@ -86,12 +87,15 @@ export function HabitCard({
         ...CARD_TRANSITION,
         delay: shouldReduceMotion ? 0 : Math.min(index * 0.018, 0.07),
       }}
-      style={{ willChange: "transform, opacity" }}
+      style={{
+        willChange: "transform, opacity",
+        zIndex: isActionMenuOpen ? 70 : "auto",
+      }}
       className={`rounded-[32px] border p-4 shadow-[0_18px_50px_rgba(0,0,0,0.26)] backdrop-blur-2xl transition ${
         completed
           ? "border-[#c6ff3d]/32 bg-[#c6ff3d]/10 shadow-[0_12px_34px_rgba(198,255,61,0.10)]"
           : "border-white/10 bg-white/[0.07] shadow-[0_12px_34px_rgba(0,0,0,0.22)]"
-      }`}
+      } relative overflow-visible`}
     >
       <div className="flex items-center gap-3.5">
         <div className="relative shrink-0">
@@ -189,6 +193,7 @@ export function HabitCard({
 
         <HabitActionMenu
           habitName={habit.name}
+          onOpenChange={setIsActionMenuOpen}
           onAnalyze={() => onAnalyze(habit)}
           onEdit={() => onEdit(habit)}
           onDelete={() => onDelete(habit)}
