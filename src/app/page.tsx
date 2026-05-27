@@ -22,15 +22,12 @@ import {
 import { fetchProfile, type Profile } from "@/lib/profile-service";
 import { supabase } from "@/lib/supabase";
 import type { Habit } from "@/types/habit";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
   CalendarDays,
   CheckCircle2,
-  Dumbbell,
   Flame,
-  Plus,
   Trophy,
 } from "lucide-react";
 import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
@@ -40,8 +37,6 @@ const DATE_FORMATTER = new Intl.DateTimeFormat("en", {
   month: "long",
   day: "numeric",
 });
-const MotionLink = motion.create(Link);
-
 function getGreeting(date = new Date()) {
   const hour = date.getHours();
 
@@ -185,13 +180,8 @@ export default function HomePage() {
   const todoHabitsToday = dueHabitsToday.filter(
     (habit) => !habit.completedDates.includes(activeToday)
   );
-  const completedToday = completedHabits.length;
   const remainingToday = todoHabitsToday.length;
   const dueTodayCount = habitsForTodayOverview.length;
-  const progressPercent =
-    dueTodayCount === 0
-      ? 0
-      : Math.round((completedToday / dueTodayCount) * 100);
   const streakStats = useMemo(() => {
     const completedDateKeys = new Set(getCheckInDates(habits));
 
@@ -263,78 +253,21 @@ export default function HomePage() {
         <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(circle_at_85%_10%,rgba(190,255,79,0.18),transparent_32%)]" />
         <section className="relative flex min-h-dvh flex-col px-5 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-5">
           <header className="-mx-5 px-5 pb-5 pt-3">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="flex items-center gap-1.5 text-[13px] font-semibold text-[#8c9686]">
-                  <CalendarDays size={15} />
-                  {formattedDate}
-                </p>
-                <p className="mt-3 text-[15px] font-medium text-[#8c9686]">
-                  {greeting}
-                </p>
-                <h1 className="mt-1 text-[40px] font-bold leading-none tracking-[-0.04em]">
-                  {username}
-                </h1>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.88 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.18, ease: [0.2, 0.8, 0.2, 1] }}
-                  className="flex h-[52px] min-w-[52px] items-center justify-center rounded-[22px] border border-white/10 bg-white/[0.08] px-3 text-[13px] font-bold text-[#d8ff69] shadow-[0_8px_20px_rgba(190,255,79,0.10)] backdrop-blur-md transform-gpu"
-                >
-                  {progressPercent}%
-                </motion.div>
-
-                <MotionLink
-                  href="/habits"
-                  className="pointer-events-auto flex h-[52px] w-[52px] shrink-0 touch-manipulation items-center justify-center rounded-[22px] bg-[#c6ff3d] text-[#081006] shadow-[0_10px_24px_rgba(198,255,61,0.24)] transform-gpu"
-                  aria-label="Manage habits"
-                  whileTap={{ scale: 0.9 }}
-                  transition={{ duration: 0.12, ease: [0.2, 0.8, 0.2, 1] }}
-                >
-                  <Plus size={21} />
-                </MotionLink>
-              </div>
+            <div>
+              <p className="flex items-center gap-1.5 text-[13px] font-semibold text-[#8c9686]">
+                <CalendarDays size={15} />
+                {formattedDate}
+              </p>
+              <p className="mt-3 text-[15px] font-medium text-[#8c9686]">
+                {greeting}
+              </p>
+              <h1 className="mt-1 text-[40px] font-bold leading-none tracking-[-0.04em]">
+                {username}
+              </h1>
             </div>
           </header>
 
-          <motion.section
-            initial={{ opacity: 0, y: 18, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.22, ease: [0.2, 0.8, 0.2, 1] }}
-            className="relative isolate overflow-hidden rounded-[36px] border border-white/10 bg-white/[0.08] p-5 shadow-[0_16px_42px_rgba(0,0,0,0.30),inset_0_1px_0_rgba(255,255,255,0.10)] [clip-path:inset(0_round_36px)] backdrop-blur-md transform-gpu"
-          >
-            <div className="pointer-events-none absolute -right-12 -top-16 h-32 w-32 rounded-full bg-[#c6ff3d]/14 blur-2xl" />
-            <div className="relative flex items-start justify-between gap-4">
-              <div>
-                <p className="text-[13px] font-semibold text-[#9fa895]">
-                  Daily momentum
-                </p>
-                <p className="mt-3 text-[54px] font-black leading-none tracking-[-0.07em] text-white">
-                  {progressPercent}
-                  <span className="text-[28px] text-[#c6ff3d]">%</span>
-                </p>
-                <p className="mt-3 text-[15px] font-medium text-[#9fa895]">
-                  {completedToday} of {dueTodayCount} due habits complete
-                </p>
-              </div>
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[24px] bg-[#c6ff3d] text-[#081006] shadow-[0_14px_34px_rgba(198,255,61,0.28)]">
-                <Dumbbell size={24} />
-              </div>
-            </div>
-            <div className="relative mt-7 h-3 overflow-hidden rounded-full bg-white/[0.10]">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${progressPercent}%` }}
-                transition={{ duration: 0.22, ease: [0.2, 0.8, 0.2, 1] }}
-                className="h-full rounded-full bg-[#c6ff3d] shadow-[0_0_12px_rgba(198,255,61,0.34)] transform-gpu"
-              />
-            </div>
-          </motion.section>
-
-          <section className="mt-4 grid grid-cols-2 gap-3">
+          <section className="grid grid-cols-2 gap-3">
             {statCards.map((card, index) => {
               const Icon = card.icon;
 
